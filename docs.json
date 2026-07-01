@@ -3,9 +3,23 @@
   "theme": "mint",
   "name": "Mintlify Starter Kit",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#e21500",
+    "light": "#f1f1f1",
+    "dark": "#0b0b0b"
+  },
+  "background": {
+    "color": {
+      "light": "#ffffff",
+      "dark": "#0b0b0b"
+    }
+  },
+  "icons": {
+    "library": "lucide"
+  },
+  "styling": {
+    "codeblocks": {
+      "theme": "css-variables"
+    }
   },
   "favicon": "/favicon.svg",
   "navigation": {
@@ -34,8 +48,8 @@
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/logo/logo-light-mode.svg",
+    "dark": "/logo/logo-dark-mode.svg"
   },
   "navbar": {
     "links": [
