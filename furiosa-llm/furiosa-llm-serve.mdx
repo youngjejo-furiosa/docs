@@ -1,0 +1,483 @@
+---
+title: "OpenAI-Compatible Server"
+---
+
+Furiosa-LLM offers an OpenAI-compatible server that hosts a single model
+and provides OpenAI-compatible chat, completions, responses, and embedding APIs
+along with some additional pooling API support.
+
+To launch the server, use the `furiosa-llm serve` command with the model
+artifact path, as follows:
+
+```bash
+furiosa-llm serve [ARTIFACT_PATH]
+```
+
+<Warning>
+This document is based on Furiosa SDK 2026.1.0rc2.
+The features and APIs described herein are subject to change in the future.
+</Warning>
+
+## Supported APIs
+
+We currently support the following APIs:
+
+* Completions API (`/v1/completions`)
+
+  * Applicable to text generation models.
+
+* Chat Completions API (`/v1/chat/completions`)
+
+  * Applicable to text generation models with a [chat template](/furiosa-llm/furiosa-llm-serve#chat-templates).
+
+* Responses API (`/v1/responses`) — [OpenResponses specification](https://www.openresponses.org/specification)
+
+  * Applicable to text generation models with a [chat template](/furiosa-llm/furiosa-llm-serve#chat-templates).
+  * See [Responses API](/furiosa-llm/responses-api) for details.
+
+* Embeddings API (`/v1/embeddings`)
+
+  * Applicable to embedding models.
+
+In addition, we have the following vLLM-compatible APIs for pooling models:
+
+* Score API (`/score`, `/v1/score`)
+
+  * Currently supported only for Qwen3-Rerank models.
+
+* Rerank API (`/rerank`, `/v1/rerank`, `/v2/rerank`)
+
+  * Currently supported only for Qwen3-Rerank models.
+
+## Prerequisites
+
+To use the OpenAI-Compatible server, you need the following:
+
+* A system with the prerequisites installed (see [Installing Prerequisites](/software-stack/get-started/prerequisites))
+* An installation of [Furiosa-LLM](/software-stack/get-started/furiosa-llm#installing-furiosa-llm)
+* A [Hugging Face access token](/software-stack/get-started/furiosa-llm#authorizing-hugging-face-hub-optional)
+* A model artifact
+* A chat template for chat applications (optional)
+
+## Using the OpenAI API
+
+Once the server is running, you can interact with it using an HTTP client,
+as shown in the following example:
+
+```bash
+curl http://localhost:8000/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d '{
+    "model": "EMPTY",
+    "messages": [{"role": "user", "content": "What is the capital of France?"}]
+    }' \
+    | python -m json.tool
+```
+
+You can also use the OpenAI client to interact with the server.
+To use the OpenAI client, you need to install the `openai` package first:
+
+```bash
+pip install openai
+```
+
+The following is an example using OpenAI client to call `chat.completions` API
+with streaming mode:
+
+```python
+import asyncio
+import os
+from openai import AsyncOpenAI
+
+base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
+
+client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+
+async def run():
+    stream_chat_completion = await client.chat.completions.create(
+        model="EMPTY",
+        messages=[{"role": "user", "content": "What is the capital of France?"}],
+        stream=True,
+    )
+
+    async for chunk in stream_chat_completion:
+        print(chunk.choices[0].delta.content or "", end="", flush=True)
+
+
+if __name__ == "__main__":
+    asyncio.run(run())
+```
+
+## Chat Templates
+
+To use a language model in a chat application, we need to prepare a structured
+string to give as input.
+This is essential because the model must understand the conversation's context,
+including the speaker's role (e.g., "user" and "assistant") and the
+message content.
+Just as different models require distinct tokenization methods, they also have
+varying input formats for chat.
+This is why a chat template is necessary.
+
+Furiosa-LLM supports chat templates based on the Jinja2 template engine, similar
+to Hugging Face Transformers.
+If the model's tokenizer includes a built-in chat template,
+`furiosa-llm serve` will automatically use it.
+However, if the tokenizer lacks a built-in template, or if you want to override
+the default, you can specify one using the `--chat-template` parameter.
+
+For reference, you can find a well-structured example of a chat template in the
+[Llama 3.1 Model Card](https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_1/).
+
+To launch the server with a custom chat template, use the following command:
+
+```bash
+furiosa-llm serve [ARTIFACT_PATH] --chat-template [CHAT_TEMPLATE_PATH]
+```
+
+## Tool Calling Support
+
+Tool calling (also known as function calling) enables models to interact with external tools and APIs.
+Furiosa-LLM supports tool calling for models trained with this capability.
+
+To start the server with tool calling enabled, use the `--tool-call-parser` option
+to specify the appropriate parser for your model. For example, to enable tool calling
+for EXAONE-4.0 models:
+
+```bash
+furiosa-llm serve furiosa-ai/EXAONE-4.0-32B-FP8 --enable-auto-tool-choice --tool-call-parser hermes
+```
+
+To use tool calling, specify the `tools` and `tool_choice`
+parameters. Here's an example:
+
+```python
+import json
+import os
+from openai import OpenAI
+
+base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
+client = OpenAI(base_url=base_url, api_key=api_key)
+
+def get_weather(location: str, unit: str):
+    return f"Getting the weather for {location} in {unit}..."
+tool_functions = {"get_weather": get_weather}
+
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "Get the current weather in a given location",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {"type": "string", "description": "City and state, e.g., 'San Francisco, CA'"},
+                "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}
+            },
+            "required": ["location", "unit"]
+        }
+    }
+}]
+
+response = client.chat.completions.create(
+    model=client.models.list().data[0].id,
+    messages=[{"role": "user", "content": "What's the weather like in San Francisco?"}],
+    tools=tools,
+    tool_choice="required"
+)
+
+tool_call = response.choices[0].message.tool_calls[0].function
+print(f"Function called: {tool_call.name}")
+print(f"Arguments: {tool_call.arguments}")
+print(f"Result: {get_weather(**json.loads(tool_call.arguments))}")
+```
+
+The expected output is as follows.
+
+```text
+Function called: get_weather
+Arguments: {"location": "San Francisco, CA", "unit": "fahrenheit"}
+Result: Getting the weather for San Francisco, CA in fahrenheit...
+```
+
+For detailed information on tool calling parsers, tool choice options, and additional examples, see [Tool Calling](/furiosa-llm/toolcalling).
+
+## Reasoning Support
+
+Furiosa-LLM provides support for models with reasoning capabilities such as Deepseek R1.
+These models follow a structured approach by first conducting reasoning steps and then providing a final answer.
+
+The reasoning process follows this sequence:
+
+1. The model-specific start-of-reasoning token is appended to the input prompt through the chat template.
+2. The model generates its reasoning.
+3. Once reasoning is done, the model outputs an end-of-reasoning token followed by the final answer.
+
+Since start-of-reasoning and end-of-reasoning tokens differ across models, we support different reasoning parsers for different models.
+You can check the help text's `--reasoning-parser` description to see which reasoning parsers are supported.
+
+To launch a server with reasoning capabilities for Qwen3 series, run the following example command:
+
+```bash
+furiosa-llm serve furiosa-ai/Qwen3-32B-FP8 --reasoning-parser qwen3
+```
+
+You can access the reasoning content through these response fields:
+
+* `response.choices[].message.reasoning`
+* `response.choices[].delta.reasoning`
+
+Here's an example that demonstrates how to access the reasoning content:
+
+```python
+import os
+from openai import OpenAI
+
+base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
+
+client = OpenAI(api_key=api_key, base_url=base_url)
+
+
+messages = [{"role": "user", "content": "9.11 and 9.8, which is greater?"}]
+response = client.chat.completions.create(
+    model=client.models.list().data[0].id,
+    messages=messages,
+    # Pass the argument here in the extra_body field for Qwen3, Exaone4
+    # It depends on the model you are using
+    extra_body={
+        "chat_template_kwargs": {
+            "enable_thinking": True
+        }
+    }
+)
+
+if hasattr(response.choices[0].message, "reasoning"):
+    print("Reasoning:", response.choices[0].message.reasoning)
+print("Answer:", response.choices[0].message.content)
+```
+
+<Note>
+The `reasoning` field is a Furiosa-LLM-specific extension and is not part of the standard OpenAI API.
+This field will appear only in responses that contain reasoning content, and
+attempting to access this field in responses without reasoning content will raise an `AttributeError`.
+</Note>
+
+## API Reference
+
+<Warning>
+Please note that using `use_beam_search` together with `stream` is not
+allowed because beam search requires the whole sequence to produce the
+output tokens.
+</Warning>
+
+<Note>
+For sampling-related fields (`temperature`, `top_p`, `top_k`,
+`min_p`, `repetition_penalty`, `max_tokens`), each field resolves
+in this order:
+
+1. The value specified in the request body, if set.
+2. The value from the model's `generation_config.json`, if present.
+3. The API default shown in the parameter table below.
+
+See [Default Sampling Parameters from `generation_config.json`](/furiosa-llm/reference/sampling-params#default-sampling-parameters-from-generation_configjson) for the full supported-field mapping
+and offline-API behavior.
+</Note>
+
+### Chat API (`/v1/chat/completions`)
+
+Parameters without descriptions inherit their behavior and functionality from the corresponding parameters in [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat).
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| model | string |  | Required by the client, but the value is ignored on the server. |
+| messages | array |  |  |
+| stream | boolean | false |  |
+| stream_options | object | null |  |
+| n | integer | 1 | Currently limited to 1. |
+| temperature | float | 1.0 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| top_p | float | 1.0 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| best_of | integer | 1 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| use_beam_search | boolean | false | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| top_k | integer | -1 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| min_p | float | 0.0 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| length_penalty | float | 1.0 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| repetition_penalty | float | 1.0 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| stop_token_ids | array[integer] | [] | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| ignore_eos | boolean | false | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| early_stopping | boolean | false | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| skip_special_tokens | boolean | true | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| return_token_ids | boolean | false | When true, includes token IDs in the response (`prompt_token_ids` and `token_ids` fields). |
+| min_tokens | integer | 0 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| max_tokens | integer | null | Legacy parameter superseded by `max_completion_tokens` |
+| max_completion_tokens | integer | null | If null, the server will use the maximum possible length considering the prompt. The sum of this value and the prompt length must not exceed the model's maximum context length. |
+| tools | array | null |  |
+| tool_choice | string or object | null |  |
+| functions | array | null | Legacy parameter superseded by `tools`. |
+| function_call | string or object | null | Legacy parameter superseded by `tool_choice`. |
+| logprobs (experimental) | boolean | false |  |
+| top_logprobs (experimental) | integer | null |  |
+
+### Completions API (`/v1/completions`)
+
+Parameters without descriptions inherit their behavior and functionality from the corresponding parameters in [OpenAI Completions API](https://platform.openai.com/docs/api-reference/completions).
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| model | string | required | Required by the client, but the value is ignored on the server. |
+| prompt | string or array | required |  |
+| stream | boolean | false |  |
+| stream_options | object | null |  |
+| n | integer | 1 | Currently limited to 1. |
+| best_of | integer | 1 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| temperature | float | 1.0 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| top_p | float | 1.0 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| use_beam_search | boolean | false | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| top_k | integer | -1 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| min_p | float | 0.0 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| length_penalty | float | 1.0 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| repetition_penalty | float | 1.0 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| stop_token_ids | array[integer] | [] | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| ignore_eos | boolean | false | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| early_stopping | boolean | false | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| skip_special_tokens | boolean | true | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| min_tokens | integer | 0 | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+| max_tokens | integer | 16 |  |
+| return_token_ids | boolean | false | When true, includes token IDs in the response (`prompt_token_ids` and `token_ids` fields). |
+| logprobs (experimental) | integer | null | See [Sampling Params](/furiosa-llm/reference/sampling-params). |
+
+### Embeddings API (`/v1/embeddings`)
+
+Parameters without descriptions inherit their behavior and functionality from the corresponding parameters in [OpenAI Embeddings API](https://platform.openai.com/docs/api-reference/embeddings/create).
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| model | string | required | Required by the client, but the value is ignored on the server. |
+| input | string or array | required |  |
+| truncate_prompt_tokens | integer | null | See [Pooling Params](/furiosa-llm/reference/pooling-params). |
+| normalize | boolean | true | See [Pooling Params](/furiosa-llm/reference/pooling-params). |
+| dimensions | integer | null | See [Pooling Params](/furiosa-llm/reference/pooling-params). |
+
+### Score API (`/score`, `/v1/score`)
+
+This API provides text pair scoring functionality, calculating similarity scores between pairs of texts.
+This is an extension to the standard OpenAI API specification, originally introduced by vLLM.
+For details on the API specification, refer to the [vLLM's Score API documentation](https://docs.vllm.ai/en/latest/serving/openai_compatible_server/#score-api).
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| model | string | required | Required by the client, but the value is ignored on the server. |
+| text_1 | string or array | required | The text to be scored as the first input. |
+| text_2 | string or array | required | The second input text to be scored. If `text_1` is a string, `text_2` can be either a string or an array, allowing 1:N scoring relationships. If `text_1` is an array, `text_2` must be an array of the same length, and scores are calculated element-wise. |
+| truncate_prompt_tokens | integer | null | See [Pooling Params](/furiosa-llm/reference/pooling-params). |
+
+### Rerank API (`/rerank`, `/v1/rerank`, `/v2/rerank`)
+
+This API provides document reranking functionality, ordering documents by relevance to a given query.
+This is an extension to the standard OpenAI API specification, originally introduced by vLLM.
+For details on the API specification, refer to the [vLLM's Rerank API documentation](https://docs.vllm.ai/en/latest/serving/openai_compatible_server/#re-rank-api).
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| model | string | required | Required by the client, but the value is ignored on the server. |
+| query | string | required | The query text to rank documents against. |
+| documents | array | required | The list of documents to be reranked. Documents are ranked by their relevance to the query, with the most relevant documents appearing first in the response. |
+| top_n | integer |  | The number of top-ranked documents to return. If not specified, all documents are returned in ranked order. |
+| truncate_prompt_tokens | integer | null | See [Pooling Params](/furiosa-llm/reference/pooling-params). |
+
+## Additional Endpoints
+
+In addition to the above APIs, the Furiosa-LLM server supports the following endpoints.
+
+### Models Endpoint
+
+The Models API enables you to retrieve information about available models through endpoints that are compatible with OpenAI's [Models API](https://platform.openai.com/docs/api-reference/models). The following endpoints are supported:
+
+* `GET /v1/models`
+* `GET /v1/models/{model_id}`
+
+You can access these endpoints using the OpenAI client's `models.list()` and `models.retrieve()` methods.
+
+The response includes the standard [model object](https://platform.openai.com/docs/api-reference/models/object) as defined by OpenAI, along with the following Furiosa-LLM-specific extensions:
+
+* `artifact_id`: Unique identifier for the model artifact.
+* `max_prompt_len`: Maximum allowed length of input prompts.
+* `max_context_len`: Maximum allowed length of the total context window.
+* `runtime_config`: Model runtime configuration parameters, including bucket specifications.
+
+### Version Endpoint
+
+`GET /version`
+
+Exposes version information for the Furiosa SDK components.
+
+### Metrics Endpoint
+
+`GET /metrics`
+
+Exposes Prometheus-compatible metrics for monitoring server performance and health.
+
+See [Monitoring the OpenAI-Compatible Server](/furiosa-llm/furiosa-llm-serve#monitoring-the-openai-compatible-server) for detailed information about available metrics and their usage.
+
+### Tokenizer API
+
+The Tokenizer API is a simple wrapper over HuggingFace-style tokenizers.
+It is available for all model types and consists of three endpoints:
+
+* `POST /tokenize` corresponds to calling `tokenizer.encode()`.
+  It accepts either a `prompt` string (completion-style) or `messages` array (chat-style, which applies the chat template before tokenizing).
+* `POST /detokenize` corresponds to calling `tokenizer.decode()`.
+* `GET /tokenizer_info` returns metadata about the tokenizer, including its class name and configuration.
+
+## Monitoring the OpenAI-Compatible Server
+
+Furiosa-LLM exposes a Prometheus-compatible metrics endpoint at /metrics,
+which provides various metrics compatible with vLLM. These metrics can be
+used to monitor LLM serving workloads and the system health.
+
+The following table shows Furiosa-LLM-specific collectors and metrics:
+
+| Metric | Type | Metric Labels | Description |
+|---|---|---|---|
+| `furiosa_llm_num_requests_running` | Gauge | `model_name`, `engine` | Number of requests currently running on RNGD. |
+| `furiosa_llm_num_requests_waiting` | Gauge | `model_name`, `engine` | Number of requests waiting to be processed. |
+| `furiosa_llm_kv_cache_usage_percent` | Gauge | `model_name`, `engine` | KV-cache usage. 1 means 100 percent usage. |
+| `furiosa_llm_prefix_cache_hits` | Counter | `model_name`, `engine` | Prefix cache hits, in terms of number of cached tokens. |
+| `furiosa_llm_prefix_cache_queries` | Counter | `model_name`, `engine` | Prefix cache queries, in terms of number of queried tokens. |
+| `furiosa_llm_prompt_tokens_total` | Counter | `model_name`, `engine` | Number of prefill tokens processed. |
+| `furiosa_llm_generation_tokens_total` | Counter | `model_name`, `engine` | Number of generation tokens processed. |
+| `furiosa_llm_request_success_total` | Counter | `model_name`, `engine`, `finished_reason` | Count of successfully processed requests. |
+| `furiosa_llm_request_prompt_tokens` | Histogram | `model_name`, `engine` | Number of prefill tokens processed. |
+| `furiosa_llm_request_generation_tokens` | Histogram | `model_name`, `engine` | Number of generation tokens processed. |
+| `furiosa_llm_request_params_n` | Histogram | `model_name`, `engine` | Histogram of the n request parameter. |
+| `furiosa_llm_request_params_max_tokens` | Histogram | `model_name`, `engine` | Histogram of the max_tokens request parameter. |
+| `furiosa_llm_time_to_first_token_seconds` | Histogram | `model_name`, `engine` | Histogram of time to first token in seconds. |
+| `furiosa_llm_inter_token_latency_seconds` | Histogram | `model_name`, `engine` | Histogram of inter-token latency in seconds. |
+| `furiosa_llm_e2e_request_latency_seconds` | Histogram | `model_name`, `engine` | Histogram of end to end request latency in seconds. |
+| (Experimental) `furiosa_llm_wire_hit_rate` | Gauge | `model_name`, `engine` | Wire pipeline hit rate. |
+| (Experimental) `furiosa_llm_jit_wire_compilation_time_seconds` | Histogram | `model_name`, `engine` | Histogram of time spent on JIT wire compilations in seconds. |
+
+## Launching the OpenAI-Compatible Server Container
+
+Furiosa-LLM offers a containerized server that can be used for faster deployment.
+Here is an example that launches the Furiosa-LLM server in a Docker container
+(replace `$HF_TOKEN` with your Hugging Face Hub token):
+
+```bash
+docker pull furiosaai/furiosa-llm:latest
+
+docker run -it --rm \
+  --device /dev/rngd:/dev/rngd \
+  --security-opt seccomp=unconfined \
+  --env HF_TOKEN=$HF_TOKEN \
+  -v $HOME/.cache/huggingface:/root/.cache/huggingface \
+  -p 8000:8000 \
+  furiosaai/furiosa-llm:latest \
+  serve furiosa-ai/Qwen2.5-0.5B-Instruct
+```
+
+You can also specify additional options for the server and replace
+`-v $HOME/.cache/huggingface:/root/.cache/huggingface` with the path to your
+Hugging Face cache directory.

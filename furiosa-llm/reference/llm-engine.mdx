@@ -1,0 +1,228 @@
+---
+title: "LLMEngine class"
+---
+
+## Overview
+
+The LLMEngine provides an interface for text generation, supporting configuration through command-line arguments.
+
+## Example Usage
+
+```python
+import argparse
+from typing import List, Tuple
+
+from furiosa_llm import EngineArgs, LLMEngine, RequestOutput, SamplingParams
+
+
+def create_test_prompts() -> List[Tuple[str, SamplingParams]]:
+    """Create a list of test prompts with their sampling parameters."""
+    return [
+        ("A robot may not injure a human being",
+        SamplingParams(temperature=0.0)),
+        ("To be or not to be,",
+        SamplingParams(temperature=0.8, top_k=5)),
+        ("What is the meaning of life?",
+        SamplingParams(n=1,
+                        temperature=0.8,
+                        top_p=0.95)),
+    ]
+
+
+def process_requests(engine: LLMEngine,
+                    test_prompts: List[Tuple[str, SamplingParams]]):
+    """Continuously process a list of prompts and handle the outputs."""
+    request_id = 0
+
+    while test_prompts or engine.has_unfinished_requests():
+        if test_prompts:
+            prompt, sampling_params = test_prompts.pop(0)
+            engine.add_request(str(request_id), prompt, sampling_params)
+            request_id += 1
+
+        request_outputs: List[RequestOutput] = engine.step()
+
+        for request_output in request_outputs:
+            if request_output.finished:
+                print(request_output)
+
+
+def initialize_engine(args: argparse.Namespace) -> LLMEngine:
+    """Initialize the LLMEngine from the command line arguments."""
+    engine_args = EngineArgs.from_cli_args(args)
+    return LLMEngine.from_engine_args(engine_args)
+
+
+def main(args: argparse.Namespace):
+    """Main function that sets up and runs the prompt processing."""
+    engine = initialize_engine(args)
+    test_prompts = create_test_prompts()
+    process_requests(engine, test_prompts)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser = EngineArgs.add_cli_args(parser)
+    args = parser.parse_args()
+    main(args)
+```
+
+The script can be executed with various arguments defined in EngineArgs, as shown in the following example:
+
+```bash
+python llm_engine.py --model /path/to/model --devices npu:0
+```
+
+For a comprehensive list of available arguments for EngineArgs, please refer to the section below.
+
+## Arguments supported by LLMEngine
+
+```text
+usage: engine_cli.py [-h] --model MODEL [--revision REVISION] [--tokenizer TOKENIZER]
+                     [--tokenizer-mode TOKENIZER_MODE] [--seed SEED]
+                     [--devices DEVICES]
+                     [--pipeline-parallel-size PIPELINE_PARALLEL_SIZE]
+                     [--data-parallel-size DATA_PARALLEL_SIZE]
+                     [--cache-dir CACHE_DIR] [--npu-queue-limit NPU_QUEUE_LIMIT]
+                     [--max-processing-samples MAX_PROCESSING_SAMPLES]
+                     [--spare-blocks-ratio SPARE_BLOCKS_RATIO]
+                     [--enable-jit-compilation ENABLE_JIT_COMPILATION]
+                     [--jit-threshold JIT_THRESHOLD]
+                     [--jit-max-workers JIT_MAX_WORKERS]
+                     [--jit-unit-size JIT_UNIT_SIZE]
+
+options:
+  -h, --help            show this help message and exit
+  --model MODEL         The Hugging Face model id, or path to Furiosa model artifact.
+                        Currently only one model is supported per server.
+  --revision REVISION   The specific model revision on Hugging Face Hub if the model
+                        is given as a Hugging Face model id. It can be a branch name,
+                        a tag name, or a commit id. Its default value is main.
+                        However, if a given model belongs to the furiosa-ai
+                        organization, the model will use the release model tag by
+                        default.
+  --tokenizer TOKENIZER
+                        The name or path of a HuggingFace Transformers tokenizer.
+  --tokenizer-mode TOKENIZER_MODE
+                        The tokenizer mode. "auto" will use the fast tokenizer if
+                        available, and "slow" will always use the slow tokenizer.
+  --seed SEED           The seed to initialize the random number generator for
+                        sampling.
+  --devices DEVICES     The devices to run the model. It can be a single device or a
+                        comma-separated list of devices. Each device can be either
+                        "npu:X" or "npu:X:Y", where X is a device index and Y is a
+                        NPU core range notation (e.g. "npu:0" for whole npu 0,
+                        "npu:0:0" for core 0 of NPU 0, and "npu:0:0-3" for fused core
+                        0-3 of npu 0). If not given, all available unoccupied devices
+                        will be used.
+  --pipeline-parallel-size PIPELINE_PARALLEL_SIZE
+                        The size of the pipeline parallelism group. If not given, it
+                        will use the value from artifact.
+  --data-parallel-size DATA_PARALLEL_SIZE
+                        The size of the data parallelism group. If not given, it will
+                        be inferred from total available PEs and other parallelism
+                        degrees.
+  --cache-dir CACHE_DIR
+                        The cache directory for temporarily generated files for this
+                        LLM instance. When its value is ``None``, caching is
+                        disabled. The default is "$HOME/.cache/furiosa/llm".
+  --npu-queue-limit NPU_QUEUE_LIMIT
+                        The NPU queue limit of the scheduler config.
+  --max-processing-samples MAX_PROCESSING_SAMPLES
+                        The maximum processing samples. Used as an hint for the
+                        scheduler.
+  --spare-blocks-ratio SPARE_BLOCKS_RATIO
+                        The spare blocks ratio. Used as an hint for the scheduler.
+  --enable-jit-compilation ENABLE_JIT_COMPILATION
+                        [EXPERIMENTAL] Enable JIT compilation.
+  --jit-threshold JIT_THRESHOLD
+                        [EXPERIMENTAL] Number of requests before triggering JIT
+                        compilation.
+  --jit-max-workers JIT_MAX_WORKERS
+                        [EXPERIMENTAL] Maximum concurrent background JIT
+                        compilations.
+  --jit-unit-size JIT_UNIT_SIZE
+                        [EXPERIMENTAL] Number of stages to compile together. Must be
+                        >= 2.
+```
+
+## API Reference
+
+### LLMEngine
+
+```python
+class furiosa_llm.LLMEngine(
+    native_engine: NativeEngineLike,
+    tokenizer: AnyTokenizer,
+    task_type: GenerationTask | PoolingTask,
+    max_model_len: int,
+    llm: LLM | None = None,
+    model_path: str | None = None,
+    trust_remote_code: bool = False,
+)
+```
+
+LLMEngine receives requests and generates texts.
+Implements the API interface compatible with vLLM's `LLMEngine`, but this class is based on furiosa-runtime and FuriosaAI NPU.
+
+The request scheduling approach of this engine is different from that of vLLM's . While vLLM provides
+fine-grained control over decoding via the `step` method, this engine immediately begins
+text generation in the background as soon as a request is submitted via [`add_request`](/furiosa-llm/reference/llm-engine#add_request),
+continuing asynchronously until completion. The generated results are placed in a queue that
+clients can retrieve by calling [`step`](/furiosa-llm/reference/llm-engine#step).
+
+The Furiosa native engine handles scheduling and batching internally,
+allowing clients to retrieve results via [`step`](/furiosa-llm/reference/llm-engine#step) calls without needing to manage the decoding schedule.
+
+#### abort_request()
+
+```python
+LLMEngine.abort_request(request_id: str | Iterable[str])
+```
+
+Aborts request(s) with the given ID.
+
+#### add_request()
+
+```python
+LLMEngine.add_request(
+    request_id: str,
+    prompt: PromptType,
+    params: SamplingParams | PoolingParams,
+) -> None
+```
+
+Adds a new request to the engine.
+The decoding iteration starts immediately after adding the request.
+
+**Args:**
+
+- `request_id`: The unique id of the request.
+- `prompt`: The prompt to the LLM.
+- `params`: The sampling | pooling parameters of the request.
+
+#### from_engine_args()
+
+*classmethod*
+
+```python
+LLMEngine.from_engine_args(args: EngineArgs) -> LLMEngine
+```
+
+Creates an LLMEngine from EngineArgs.
+
+#### has_unfinished_requests()
+
+```python
+LLMEngine.has_unfinished_requests() -> bool
+```
+
+Returns True if there are unfinished requests.
+
+#### step()
+
+```python
+LLMEngine.step() -> list[RequestOutput | PoolingRequestOutput]
+```
+
+Returns newly generated results of one decoding iteration from the queue.

@@ -1,40 +1,87 @@
 ---
-title: "Introduction"
-description: "Welcome to your project"
+title: "Welcome to Furiosa Docs"
 ---
 
+Welcome!
+FuriosaAI offers a streamlined software stack designed for deep learning model
+inference on FuriosaAI NPUs.
+This guide covers the entire workflow for creating inference applications,
+starting from a PyTorch model, through model quantization, and model serving and
+deployment.
 
+<Columns cols={2}>
+  <Card title="Latest Release 2026.1.0rc2" icon="megaphone" href="/software-stack/whats-new/release-2026-1">
+    Stay up to date with the newest features, improvements, and fixes in the latest release.
+  </Card>
+  <Card title="Quick Start with Furiosa-LLM" icon="rocket" href="/software-stack/get-started/furiosa-llm">
+    Furiosa-LLM is a high-performance inference engine for LLM models.
+    This document explains how to install and use Furiosa-LLM.
+  </Card>
+  <Card title="Roadmap Overview" icon="map" href="/software-stack/roadmap">
+    See what's ahead for FuriosaAI with our planned releases and upcoming features.
+    Stay informed on development progress and key milestones.
+  </Card>
+  <Card title="Hugging Face Hub" icon="smile-plus" href="https://huggingface.co/furiosa-ai">
+    Pre-optimized and pre-compiled models for FuriosaAI NPUs are available on the Hugging Face Hub.
+    Check out the latest models and their capabilities.
+  </Card>
+</Columns>
 
-Write a short description of your product here. What it does, who it's for, and what they can accomplish with it.Write a short description of your product here. What it does, who it's for, and what they can accomplish with it.
+## Overview
 
-<Tip>
-  Ready to make this your own? Start by editing this page. Update your `docs.json` file to customize your site. Then fill out the [Quickstart](/quickstart) page.
-</Tip>
+<img src="/images/SW_stack_3D.png" alt="FuriosaAI Software Stack" />
 
-<Card title="Quickstart" icon="rocket" href="/quickstart">
-  This card links to the quickstart page in your project.
-</Card>
+- [RNGD](/hardware/rngd): RNGD Hardware Specification, and features
+- [Software Stack](/software-stack/overview): An overview of the FuriosaAI software stack
+- [Supported Models](/software-stack/supported-models): A list of supported models
+- [What's New](/software-stack/whats-new): New features and changes in the latest release
+- [Roadmap](/software-stack/roadmap): The future roadmap of FuriosaAI Software Stack
 
-<Card title="Components" icon="puzzle-piece" href="https://mintlify.com/docs/components">
-  Add cards, callouts, steps, tabs, and more to design and structure your pages.
-</Card>
+## Get Started
 
-<Card title="Settings" icon="gear" href="https://mintlify.com/docs/organize/settings">
-  Set your site name, branding, and navigation in the `docs.json` file.
-</Card>
+- [Installing Prerequisites](/software-stack/get-started/prerequisites): How to install the prerequisites for FuriosaAI Software Stack
+- [Upgrade Guide](/software-stack/get-started/upgrade-guide): How to upgrade the FuriosaAI Software Stack
+- [Getting Started with Furiosa-LLM](/software-stack/get-started/furiosa-llm)
 
-<Tip>
-  Ready to make this your own? Start by editing this page. Update your `docs.json` file to customize your site. Then fill out the [Quickstart](/quickstart) page.
-</Tip>
+## Furiosa-LLM
 
-<Card title="Quickstart" icon="rocket" href="/quickstart">
-  This card links to the quickstart page in your project.
-</Card>
+- [Furiosa-LLM](/furiosa-llm/intro): An introduction to Furiosa-LLM
+- [OpenAI-Compatible Server](/furiosa-llm/furiosa-llm-serve): More details about the OpenAI-compatible server and its features
+- [Tool Calling](/furiosa-llm/toolcalling): Guide to tool calling with parsers and choice options
+- [Structured Output](/furiosa-llm/structured-output): Guide to structured output generation
+- [Vision-Language Models](/furiosa-llm/vision-language): Guide to serving Vision-Language models with image inputs
+- [Prefix Caching](/furiosa-llm/prefix-caching): Guide to prefix caching for improved performance
+- [Hybrid KV Cache](/furiosa-llm/hybrid-kv-cache): Understanding hybrid KV cache management
+- [Data-Parallel Routing](/furiosa-llm/data-parallel-routing): Understanding scoring-based data-parallel routing
+- [Model Preparation](/furiosa-llm/model-preparation): How to prepare LLM models to be served by Furiosa-LLM
+- [Model Parallelism](/furiosa-llm/model-parallelism): Tensor/Pipeline/Data parallelism in Furiosa-LLM
+- [API Reference](/furiosa-llm/reference): The Python API reference for Furiosa-LLM
+- [Examples](/furiosa-llm/examples): Examples of using Furiosa-LLM
+- [Kubernetes Deployment](/cloud-native/k8s-deployment): A guide to deploying Furiosa-LLM on Kubernetes
 
-<Card title="Components" icon="puzzle-piece" href="https://mintlify.com/docs/components">
-  Add cards, callouts, steps, tabs, and more to design and structure your pages.
-</Card>
+## Cloud Native Toolkit
 
-<Card title="Settings" icon="gear" href="https://mintlify.com/docs/organize/settings">
-  Set your site name, branding, and navigation in the `docs.json` file.
-</Card>
+- [Cloud Native Toolkit](/cloud-native/introduction): An overview of the Cloud Native Toolkit
+- [Container](/cloud-native/container): An overview of Container Support
+- [Kubernetes](/cloud-native/kubernetes): An overview of the Kubernetes Support
+- [LLM-D](/cloud-native/llm-d): A guide to deploying LLM-D on Kubernetes
+
+## Device Management
+
+- [Furiosa SMI CLI](/software-stack/device-management/furiosa-smi-cli): A command line utility for managing FuriosaAI NPUs
+- [Furiosa SMI Library](/software-stack/device-management/furiosa-smi-lib): A library for managing FuriosaAI NPUs
+- [Host Tuning](/software-stack/device-management/host-tuning): Host PCI optimization tuning guides
+
+## Tutorials and Examples
+
+- [FuriosaAI SDK CookBook](https://github.com/furiosa-ai/sdk-cookbook): A collection of OSS projects for AI-driven solutions using FuriosaAI NPUs.
+
+## Customer Support
+
+- [FuriosaAI Forum](https://forums.furiosa.ai)
+- [FuriosaAI Customer Portal](https://furiosa-ai.atlassian.net/servicedesk/customer/portals/)
+
+## Other Links
+
+- [FuriosaAI Home](https://furiosa.ai)
+- [FuriosaAI Warboy SDK Document](https://furiosa-ai.github.io/docs/latest/en/)

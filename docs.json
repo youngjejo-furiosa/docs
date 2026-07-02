@@ -23,41 +23,111 @@
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "pages": [
-      {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
-        ]
-      }
-    ],
     "tabs": [
       {
-        "tab": "Furiosa Docs",
-        "pages": [
-          "index"
-        ]
-      },
-      {
-        "tab": "Cloud-Native Toolkit",
+        "tab": "Software Stack",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Overview",
             "pages": [
-              "cloud-native/introduction"
+              "index",
+              "software-stack/overview",
+              "software-stack/supported-models",
+              "software-stack/roadmap"
+            ]
+          },
+          {
+            "group": "What's New",
+            "pages": [
+              "software-stack/whats-new",
+              "software-stack/whats-new/release-2026-1",
+              "software-stack/whats-new/release-2025"
+            ]
+          },
+          {
+            "group": "Get Started",
+            "pages": [
+              "software-stack/get-started/prerequisites",
+              "software-stack/get-started/furiosa-llm",
+              "software-stack/get-started/upgrade-guide"
+            ]
+          },
+          {
+            "group": "Device Management",
+            "pages": [
+              "software-stack/device-management/system-management-interface",
+              "software-stack/device-management/furiosa-smi-cli",
+              "software-stack/device-management/furiosa-smi-lib",
+              "software-stack/device-management/host-tuning"
             ]
           }
         ]
       },
       {
         "tab": "Furiosa-LLM",
-        "pages": [
+        "groups": [
           {
-            "group": "Getting Started",
+            "group": "Furiosa-LLM",
             "pages": [
-              "introduction",
-              "quickstart"
+              "furiosa-llm/intro",
+              "furiosa-llm/furiosa-llm-serve",
+              "furiosa-llm/responses-api",
+              "furiosa-llm/toolcalling",
+              "furiosa-llm/structured-output",
+              "furiosa-llm/vision-language",
+              "furiosa-llm/prefix-caching",
+              "furiosa-llm/hybrid-kv-cache",
+              "furiosa-llm/data-parallel-routing",
+              "furiosa-llm/model-preparation",
+              "furiosa-llm/model-parallelism"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "furiosa-llm/reference",
+              "furiosa-llm/reference/llm",
+              "furiosa-llm/reference/sampling-params",
+              "furiosa-llm/reference/pooling-params",
+              "furiosa-llm/reference/artifact-builder",
+              "furiosa-llm/reference/llm-engine",
+              "furiosa-llm/reference/async-llm-engine"
+            ]
+          },
+          {
+            "group": "Examples",
+            "pages": [
+              "furiosa-llm/examples",
+              "furiosa-llm/examples/llm-chat",
+              "furiosa-llm/examples/llm-embed",
+              "furiosa-llm/examples/llm-score",
+              "furiosa-llm/examples/llm-rerank",
+              "furiosa-llm/examples/online-chat-completion-logprobs"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Cloud-Native Toolkit",
+        "groups": [
+          {
+            "group": "Cloud-Native Toolkit",
+            "pages": [
+              "cloud-native/introduction",
+              "cloud-native/container",
+              {
+                "group": "Kubernetes",
+                "pages": [
+                  "cloud-native/kubernetes",
+                  "cloud-native/kubernetes/device-plugin",
+                  "cloud-native/kubernetes/feature-discovery",
+                  "cloud-native/kubernetes/metrics-exporter",
+                  "cloud-native/kubernetes/npu-operator",
+                  "cloud-native/kubernetes/dra-driver"
+                ]
+              },
+              "cloud-native/llm-d",
+              "cloud-native/k8s-deployment"
             ]
           }
         ]
@@ -66,9 +136,9 @@
         "tab": "Hardware Manual",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Hardware Manual",
             "pages": [
-              "introduction-1"
+              "hardware/rngd"
             ]
           }
         ]
@@ -82,14 +152,14 @@
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "label": "Forums",
+        "href": "https://forums.furiosa.ai"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
+      "label": "Customer Support",
+      "href": "https://furiosa-ai.atlassian.net/servicedesk/customer/portals/"
     }
   },
   "contextual": {

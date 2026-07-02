@@ -1,0 +1,50 @@
+---
+title: "FuriosaAI RNGD"
+---
+
+RNGD is FuriosaAI's second-generation Neural Processing Unit (NPU) designed to accelerate deep learning inference.
+The NPU natively supports a broad spectrum of workloads, including high-performance Large Language Models (LLMs), multi-modal models, and vision-based neural networks.
+
+<img src="/images/Furiosa_RNGD_image.png" alt="FuriosaAI RNGD" width="960" />
+
+RNGD implements the Tensor Contraction Processor (TCP), a novel architecture designed to natively execute complex tensor contractions---the core mathematical operations underlying modern deep learning---directly in hardware.
+By leveraging this paradigm, the NPU maximizes both compute utilization and energy efficiency.
+Fabricated on TSMC's 5nm process node and operating at a 1.0 GHz clock frequency, RNGD delivers high-throughput execution across diverse precision formats, achieving 256 TFLOPS for BF16, 512 TFLOPS for FP8, 512 TOPS for INT8, and 1024 TOPS for INT4 workloads.
+To sustain these compute throughputs without memory bottlenecks, the chip integrates two HBM3 modules that provide an aggregate memory bandwidth of 1.5 TB/s.
+Furthermore, it interfaces with the host via PCIe Gen5 x16, ensuring low-latency data movement.
+
+In addition to its core compute capabilities, RNGD seamlessly integrates into cloud-native and multi-tenant environments like Kubernetes.
+By implementing Single Root I/O Virtualization (SR-IOV), the system allows a single physical chip to be partitioned into 2, 4, or 8 independent NPU instances.
+Each virtual instance operates with strict hardware isolation, utilizing its own dedicated compute cores and private memory bandwidth to guarantee deterministic latency for co-located workloads.
+
+For a detailed technical analysis of the TCP architecture and the RNGD implementation, please refer to the following publications:
+
+* [TCP: A Tensor Contraction Processor for AI Workloads (ISCA 2024)](https://ieeexplore.ieee.org/document/10609575) ([PDF](https://furiosa.ai/download/FuriosaAI-tensor-contraction-processor-isca24))
+* [FuriosaAI RNGD: A Tensor Contraction Processor for Sustainable AI Computing (Hotchips 2024)](https://hc2024.hotchips.org/#clip=8jnhm5vdlsow)
+* [Tensor Contraction Processor: The First Future-Proof AI Chip Architecture](https://furiosa.ai/blog/tensor-contraction-processor-ai-chip-architecture)
+
+<table>
+  <caption>RNGD Hardware Specification</caption>
+  <tbody>
+    <tr><td>Architecture</td><td>Tensor Contraction Processor</td></tr>
+    <tr><td>Process Node</td><td>TSMC 5nm</td></tr>
+    <tr><td>Frequency</td><td>1.0 GHz</td></tr>
+    <tr><td>BF16</td><td>256 TFLOPS</td></tr>
+    <tr><td>FP8</td><td>512 TFLOPS</td></tr>
+    <tr><td>INT8</td><td>512 TOPS</td></tr>
+    <tr><td>INT4</td><td>1024 TOPS</td></tr>
+    <tr><td>Memory Bandwidth</td><td>HBM3 1.5TB/s</td></tr>
+    <tr><td>Memory Capacity</td><td>HBM3 48GB</td></tr>
+    <tr><td>On-Chip SRAM</td><td>256MB</td></tr>
+    <tr><td>Interconnect Interface</td><td>PCIe Gen5 x16</td></tr>
+    <tr><td>Thermal Solution</td><td>Passive</td></tr>
+    <tr><td>Thermal Design Power (TDP)</td><td>150W</td></tr>
+    <tr><td>Power Connector</td><td>12VHPWR</td></tr>
+    <tr><td>Form Factor</td><td>PCIe dual-slot full-height 3/4 Length</td></tr>
+    <tr><td>Multi-Instance Support</td><td>8</td></tr>
+    <tr><td>Virtualization Support</td><td>Yes</td></tr>
+    <tr><td>SR-IOV</td><td>8 Virtual Functions</td></tr>
+    <tr><td>ECC Memory Support</td><td>Yes</td></tr>
+    <tr><td>Secure Boot with Root of Trust</td><td>Yes</td></tr>
+  </tbody>
+</table>

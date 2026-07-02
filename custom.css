@@ -1,0 +1,37 @@
+/* Hand-maintained overrides. style.css is generated — do not merge this in. */
+
+/*
+ * Sidebar nav scrollbar (#sidebar-content is Mintlify's stable ID for the
+ * scrollable sidebar area): invisible at rest, thin muted thumb on hover.
+ * Scrolling itself is unaffected.
+ *
+ * Firefox + Chrome ≥121 use the standard scrollbar-* properties; Safari
+ * falls back to the ::-webkit-scrollbar rules.
+ */
+#sidebar-content {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+#sidebar-content:hover {
+  scrollbar-color: var(--ui-neutral-250, #c6c6c6) transparent;
+}
+.dark #sidebar-content:hover {
+  scrollbar-color: var(--ui-neutral-800, #2d2d2d) transparent;
+}
+
+#sidebar-content::-webkit-scrollbar {
+  width: 5px;
+}
+#sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+#sidebar-content::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: var(--ui-radius-full, 9999px);
+}
+#sidebar-content:hover::-webkit-scrollbar-thumb {
+  background: var(--ui-neutral-250, #c6c6c6);
+}
+.dark #sidebar-content:hover::-webkit-scrollbar-thumb {
+  background: var(--ui-neutral-800, #2d2d2d);
+}

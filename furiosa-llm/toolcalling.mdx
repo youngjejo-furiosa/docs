@@ -1,0 +1,199 @@
+---
+title: "Tool Calling"
+---
+
+Tool calling (also known as function calling) enables models to interact with external tools and APIs.
+Furiosa-LLM supports tool calling for models trained with this capability.
+
+## Tool Calling Parsers
+
+The system converts model outputs into the OpenAI response format through a
+designated parser implementation. Tool calling parsers are model-dependent,
+as different models use different formats for tool calls.
+
+Currently, Furiosa-LLM supports the following tool calling parsers:
+
+* `hermes`: For models using the Hermes tool calling format (e.g., EXAONE-4.0, Qwen3 series)
+* `llama3_json`: For Llama series models (e.g., Llama 3.1, Llama 3.2)
+* `openai`: For models using the OpenAI tool calling format (e.g., gpt-oss-20b, gpt-oss-120b)
+
+When starting the server, specify the appropriate parser using the `--tool-call-parser` option.
+
+## Tool Choice Options
+
+The `tool_choice` parameter controls how the model selects tools to call. Furiosa-LLM supports the following options:
+
+* `auto` (default): The model decides whether to call a tool or respond directly based on the conversation context.
+* `required`: Forces the model to call at least one tool. The model cannot respond without making a tool call.
+* `{"type": "function", "function": {"name": "<function_name>"}}`: Forces the model to call a specific named function.
+
+For more details on the tool calling specification, refer to the [OpenAI Chat API documentation](https://platform.openai.com/docs/api-reference/chat/create#chat-create-tool_choice).
+
+### Offline Example
+
+```python Offline Example of Tool Calling
+import json
+import random
+import string
+from furiosa_llm import LLM, SamplingParams
+
+
+def generate_random_id(length=9):
+    characters = string.ascii_letters + string.digits
+    random_id = "".join(random.choice(characters) for _ in range(length))
+    return random_id
+
+
+# simulate an API that can be called
+def get_current_weather(city: str, state: str, unit: "str"):
+    return (
+        f"The weather in {city}, {state} is 85 degrees {unit}. It is "
+        "partly cloudly, with highs in the 90's."
+    )
+
+
+tool_functions = {"get_current_weather": get_current_weather}
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_weather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "city": {
+                        "type": "string",
+                        "description": "The city to find the weather for, e.g. 'San Francisco'",
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "the two-letter abbreviation for the state that the city is"
+                        " in, e.g. 'CA' which would mean 'California'",
+                    },
+                    "unit": {
+                        "type": "string",
+                        "description": "The unit to fetch the temperature in",
+                        "enum": ["celsius", "fahrenheit"],
+                    },
+                },
+                "required": ["city", "state", "unit"],
+            },
+        },
+    }
+]
+
+messages = [
+    {
+        "role": "system",
+        "content": "When you receive a tool call response, use the output to format an answer to the original user question.\n\nYou are a helpful assistant with tool calling capabilities.",
+    },
+    {
+        "role": "user",
+        "content": "Can you tell me what the temperature will be in Dallas, in fahrenheit?",
+    },
+]
+
+with LLM("furiosa-ai/Llama-3.1-8B-Instruct") as llm:
+    sampling_params = SamplingParams(max_tokens=512, temperature=1.0)
+
+    outputs = llm.chat(messages, sampling_params=sampling_params, tools=tools)
+    output = outputs[0].outputs[0].text.strip()
+
+    # append the assistant message
+    messages.append(
+        {
+            "role": "assistant",
+            "content": output,
+        }
+    )
+
+    # let's now actually parse and execute the model's output simulating an API call by using the
+    # above defined function
+    tool_call = json.loads(output)
+    tool_answer = tool_functions[tool_call["name"]](**tool_call["parameters"])
+
+    # append the answer as a tool message and let the LLM give you an answer
+    messages.append(
+        {
+            "role": "tool",
+            "content": {"output": tool_answer},
+            "tool_call_id": generate_random_id(),
+        }
+    )
+
+    outputs = llm.chat(messages, sampling_params, tools=tools)
+    print(outputs[0].outputs[0].text.strip())
+# yields
+#   'The current temperature in Dallas, TX is 85 degrees Fahrenheit. '
+#   'It is partly cloudy with highs in the 90's.
+```
+
+### Online Example with Named Function Calling
+
+```python Online Example with Named Function Calling
+import json
+import os
+from openai import OpenAI
+
+base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
+client = OpenAI(base_url=base_url, api_key=api_key)
+
+def get_weather(location: str, unit: str):
+    return f"Getting the weather for {location} in {unit}..."
+
+def get_time(timezone: str):
+    return f"Getting the current time in {timezone}..."
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {"type": "string", "description": "City and state, e.g., 'San Francisco, CA'"},
+                    "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}
+                },
+                "required": ["location", "unit"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_time",
+            "description": "Get the current time in a given timezone",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "timezone": {"type": "string", "description": "Timezone, e.g., 'America/Los_Angeles'"}
+                },
+                "required": ["timezone"]
+            }
+        }
+    }
+]
+
+# The user asks for both weather and time, but ``tool_choice`` forces the
+# model to call ``get_weather`` only. The response is constrained to
+# ``get_weather``'s schema, so the model cannot smuggle a ``timezone``
+# argument (which belongs to ``get_time``) into the call.
+response = client.chat.completions.create(
+    model=client.models.list().data[0].id,
+    messages=[{"role": "user", "content": "What's the weather and time in San Francisco?"}],
+    tools=tools,
+    tool_choice={"type": "function", "function": {"name": "get_weather"}},  # Force specific function
+    temperature=0.0,
+)
+
+tool_call = response.choices[0].message.tool_calls[0].function
+print(f"Function called: {tool_call.name}")
+print(f"Arguments: {tool_call.arguments}")
+assert tool_call.name == "get_weather", f"Expected 'get_weather' but got '{tool_call.name}'"
+print(f"Result: {get_weather(**json.loads(tool_call.arguments))}")
+```

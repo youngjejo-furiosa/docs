@@ -1,0 +1,404 @@
+---
+title: "LLM class"
+---
+
+## LLM
+
+```python
+class furiosa_llm.LLM(
+    model_id_or_path: str | os.PathLike,
+    *,
+    fxb: str | os.PathLike | None = None,
+    revision: str | None = None,
+    devices: str | Sequence[Device] | None = None,
+    data_parallel_size: int | None = None,
+    pipeline_parallel_size: int | None = None,
+    num_blocks_per_pp_stage: Sequence[int] | None = None,
+    max_io_memory_mb: int = 2048,
+    scheduler_config: SchedulerConfig | None = None,
+    structured_outputs_backend: Literal["auto", "guidance", "xgrammar"] = "auto",
+    tokenizer: str | PreTrainedTokenizer | PreTrainedTokenizerFast | None = None,
+    tokenizer_mode: TokenizerModeType = "auto",
+    seed: int | None = None,
+    cache_dir: os.PathLike = CACHE_DIR,
+    skip_engine: bool = False,
+    enable_jit_compilation: bool = False,
+    jit_threshold: int = DEFAULT_JIT_THRESHOLD,
+    jit_max_workers: int = DEFAULT_JIT_MAX_WORKERS,
+    jit_unit_size: int = DEFAULT_JIT_UNIT_SIZE,
+    served_model_name: str | None = None,
+    **kwargs,
+)
+```
+
+An LLM for generating texts from given prompts and sampling parameters.
+
+Instantiate LLM from saved artifacts or from a v3 engine (FXB).
+
+When `fxb` is provided, the v3 engine path is used: `model_id_or_path` is
+treated as a HuggingFace model id or directory, and model metadata is derived from it.
+When `fxb` is omitted, `model_id_or_path` is resolved via HuggingFace Hub
+download if needed. If the resolved directory contains `artifact.json`, the
+legacy artifact path is used. Otherwise, the v3 engine path is used and `.fxb`
+files are auto-discovered from the model directory.
+
+**Args:**
+
+- `model_id_or_path`: A path to furiosa llm engine artifact or a HuggingFace model id.
+- `fxb`: Path to the FXB artifact file. When provided, the v3 engine is used
+  and `model_id_or_path` is treated as a HuggingFace model id or directory.
+  When omitted, FXB files are auto-discovered from the model directory if
+  no `artifact.json` is present.
+- `revision`: The revision of the model, if `model_id_or_path` is a HuggingFace model id.
+- `devices`: The devices to run the model. It can be a single device or a list of devices.
+  Each device can be either "npu:X" or "npu:X:\*" where X is a specific device index.
+  If not given, all available devices will be used.
+- `data_parallel_size`: The size of the data parallelism group. If not given, it will be inferred from
+  total available PEs and other parallelism degrees.
+- `pipeline_parallel_size`: The size of the pipeline parallelism.
+  If not given, it will use the value from artifact.
+- `num_blocks_per_pp_stage`: The number of transformer blocks per each pipeline parallelism stage.
+  If only `pipeline_parallel_size` is provided, transformer blocks will be distributed equally.
+- `max_io_memory_mb`: Maximum NPU memory to be used as I/O tensor, which can range from 0 to 48GB.
+  If unspecified, will use the default value of 2048.
+- `scheduler_config`: Configuration for the scheduler, allowing to maximum number of tasks which can
+  be queued to HW, maximum number of samples that can be processed by the scheduler, and ratio
+  of spare blocks that are reserved by scheduler. If this is not given, scheduler config saved
+  in the artifacts will be used.
+- `structured_outputs_backend`: The backend for structured outputs. "auto" will automatically select the
+  best backend based on the model. "guidance" will use the guidance library. "xgrammar" will
+  use the xgrammar library.
+- `tokenizer`: The name or path of a HuggingFace Transformers tokenizer.
+- `tokenizer_mode`: The tokenizer mode. "auto" will use the fast tokenizer
+  if available, and "slow" will always use the slow tokenizer.
+- `seed`: The seed to initialize the random number generator for sampling.
+- `cache_dir`: The cache directory for all generated files for this LLM instance.
+  When its value is `None`, caching is disabled. The default is "$HOME/.cache/furiosa/llm".
+- `skip_engine`: If True, the native runtime engine will not be initialized. This is useful when you need
+  the pipelines for other purposes than running them with the engine.
+- `enable_jit_compilation`: \[EXPERIMENTAL] If True, JIT compilation will be enabled.
+- `jit_threshold`: \[EXPERIMENTAL] Number of requests before triggering JIT compilation.
+- `jit_max_workers`: \[EXPERIMENTAL] Maximum concurrent background JIT compilations.
+- `jit_unit_size`: \[EXPERIMENTAL] Number of stages to compile together. Must be >= 2.
+- `served_model_name`: The model name used in metrics and API responses.
+  If not specified, defaults to `model_id_or_path`.
+
+### chat()
+
+```python
+LLM.chat(
+    messages: list[ChatCompletionMessageParam] | list[list[ChatCompletionMessageParam]],
+    sampling_params: SamplingParams | None = None,
+    chat_template: str | None = None,
+    chat_template_content_format: ChatTemplateContentFormatOption = "string",
+    add_generation_prompt: bool = True,
+    continue_final_message: bool = False,
+    tools: list[dict[str, Any]] | None = None,
+    chat_template_kwargs: dict[str, Any] | None = None,
+) -> list[RequestOutput]
+```
+
+Generate responses for a chat conversation.
+
+The chat conversation is converted into a text prompt using the
+tokenizer and calls the [`generate`](/furiosa-llm/reference/llm#generate) method to generate the
+responses.
+
+**Args:**
+
+- `messages`: A list of conversations or a single conversation.
+  - Each conversation is represented as a list of messages.
+  - Each message is a dictionary with 'role' and 'content' keys.
+- `sampling_params`: The sampling parameters for text generation.
+- `chat_template`: The template to use for structuring the chat.
+  If not provided, the model's default chat template will be used.
+- `chat_template_content_format`: The format to render message content.
+  Currently only "string" is supported.
+- `add_generation_prompt`: If True, adds a generation template
+  to each message.
+- `continue_final_message`: If True, continues the final message in
+  the conversation instead of starting a new one. Cannot be
+  `True` if `add_generation_prompt` is also `True`.
+- `tools`: Optional list of tools to use in the chat.
+- `chat_template_kwargs`: Additional keyword arguments to pass to the
+  chat template rendering function.
+
+**Returns:**
+
+A list of `RequestOutput` objects containing the generated
+responses in the same order as the input messages.
+
+### embed()
+
+```python
+LLM.embed(
+    prompts: PromptType | Sequence[PromptType],
+    pooling_params: PoolingParams | Sequence[PoolingParams] | None = None,
+) -> list[EmbeddingRequestOutput]
+```
+
+Generate an embedding vector for each prompt. Only applicable to embedding models.
+
+**Args:**
+
+- `prompts`: The prompts to the LLM. You may pass a sequence of prompts
+  for batch embedding.
+- `pooling_params`: The pooling parameters for pooling.
+
+**Returns:**
+
+A list of `EmbeddingRequestOutput` objects containing the
+embedding vectors in the same order as the input prompts.
+
+### encode()
+
+```python
+LLM.encode(
+    prompts: PromptType | Sequence[PromptType],
+    pooling_params: PoolingParams | Sequence[PoolingParams] | None = None,
+    *,
+    pooling_task: PoolingTask | None = None,
+) -> list[PoolingRequestOutput]
+```
+
+Apply pooling to the hidden states corresponding to the input prompts.
+
+**Args:**
+
+- `prompts`: The prompts to the LLM. You may pass a sequence of prompts
+  for batch inference.
+- `pooling_params`: The pooling parameters for pooling.
+- `pooling_task`: Override the pooling task to use.
+
+**Returns:**
+
+A list of `PoolingRequestOutput` objects containing the
+pooled hidden states in the same order as the input prompts.
+
+### generate()
+
+```python
+LLM.generate(
+    prompts: str | list[str],
+    sampling_params: SamplingParams | None = None,
+    prompt_token_ids: BatchEncoding | None = None,
+    tokenizer_kwargs: dict[str, Any] | None = None,
+) -> RequestOutput | list[RequestOutput]
+```
+
+Generate texts from given prompts and sampling parameters.
+
+**Args:**
+
+- `prompts`: The prompts to generate texts.
+- `sampling_params`: The sampling parameters for generating texts.
+  If None, model's generation config defaults are used.
+- `prompt_token_ids`: Pre-tokenized prompt input as a `BatchEncoding` object.
+  If not provided, the prompt will be tokenized internally using the tokenizer.
+- `tokenizer_kwargs`: Additional keyword arguments passed to the tokenizer's
+  `encode` method, such as `{"use_special_tokens": True}`.
+
+**Returns:**
+
+A list of `RequestOutput` objects containing the generated
+completions in the same order as the input prompts.
+
+### get_default_sampling_params()
+
+```python
+LLM.get_default_sampling_params() -> SamplingParams
+```
+
+Return SamplingParams reflecting model's generation_config defaults.
+
+If the model has no generation_config or it matches HF defaults,
+returns a default SamplingParams().
+
+### load_artifact()
+
+*classmethod*
+
+```python
+LLM.load_artifact(
+    model_id_or_path: str | os.PathLike,
+    **kwargs,
+) -> LLM
+```
+
+Deprecated: Use LLM() constructor directly.
+
+This method is kept for backward compatibility and will be removed in a future release.
+
+### score()
+
+```python
+LLM.score(
+    data_1: PromptType | Sequence[PromptType],
+    data_2: PromptType | Sequence[PromptType],
+    /,
+    *,
+    truncate_prompt_tokens: int | None = None,
+    pooling_params: PoolingParams | None = None,
+    chat_template: str | None = None,
+) -> list[ScoringRequestOutput]
+```
+
+Generate similarity scores for all pairs `<text,text_pair>`.
+
+The inputs can be `1 -> 1`, `1 -> N` or `N -> N`.
+In the `1 - N` case the `data_1` input will be replicated `N`
+times to pair with the `data_2` inputs.
+
+**Args:**
+
+- `data_1`: Can be a single prompt or a list of prompts.
+  When a list, it must have the same length as the `data_2` list.
+- `data_2`: The data to pair with the query to form the input to
+  the LLM.
+- `truncate_prompt_tokens`: The number of tokens to truncate the prompt to.
+- `pooling_params`: The pooling parameters for pooling. If None, we
+  use the default pooling parameters.
+- `chat_template`: The chat template to use for the scoring. If None, we
+  use the model's default chat template.
+
+**Returns:**
+
+A list of `ScoringRequestOutput` objects containing the
+generated scores in the same order as the input prompts.
+
+### shutdown()
+
+```python
+LLM.shutdown()
+```
+
+Shutdown the LLM engine gracefully. Idempotent.
+
+### stream_generate()
+
+*async*
+
+```python
+LLM.stream_generate(
+    prompt: str,
+    sampling_params: SamplingParams | None = None,
+    prompt_token_ids: BatchEncoding | None = None,
+    tokenizer_kwargs: dict[str, Any] | None = None,
+    is_demo: bool = False,
+) -> AsyncGenerator[str, None]
+```
+
+Generate texts from given prompt and sampling parameters.
+
+**Args:**
+
+- `prompt`: The prompt to generate texts. Note that unlike `generate`,
+  this API supports only a single prompt.
+- `sampling_params`: The sampling parameters for generating texts.
+- `prompt_token_ids`: Pre-tokenized prompt input as a `BatchEncoding` object.
+  If not provided, the prompt will be tokenized internally using the tokenizer.
+- `tokenizer_kwargs`: Additional keyword arguments passed to the tokenizer's
+  `encode` method, such as `{"use_special_tokens": True}`.
+
+**Returns:**
+
+A stream of generated output tokens.
+
+## Key Methods
+
+### generate()
+
+Generate text completions for the given prompts using sampling parameters.
+This is the primary method for text generation tasks.
+
+When `sampling_params` is omitted or `None`, the defaults returned by
+[`get_default_sampling_params`](/furiosa-llm/reference/llm#get_default_sampling_params) are used. The same behavior applies to
+[`furiosa_llm.LLM.chat`](/furiosa-llm/reference/llm#chat) and [`furiosa_llm.LLM.stream_generate`](/furiosa-llm/reference/llm#stream_generate).
+See [Default Sampling Parameters from `generation_config.json`](/furiosa-llm/reference/sampling-params#default-sampling-parameters-from-generation_configjson) for details.
+
+See the [chat example](/furiosa-llm/examples/llm-chat) for usage.
+
+### get_default_sampling_params()
+
+Returns the [`furiosa_llm.SamplingParams`](/furiosa-llm/reference/sampling-params) used when `generate()`,
+`chat()`, or `stream_generate()` is called without an explicit
+`sampling_params` argument.
+
+If the loaded artifact contains a `generation_config.json` file, its
+values populate the returned object; otherwise a plain `SamplingParams()`
+is returned. See [Default Sampling Parameters from `generation_config.json`](/furiosa-llm/reference/sampling-params#default-sampling-parameters-from-generation_configjson) for the full list of
+honored fields and the resolution rules on the server side.
+
+### embed()
+
+Generate embedding vectors for the given prompts. This method is only applicable to embedding models.
+
+**Parameters:**
+
+* `prompts` (PromptType | Sequence[PromptType]): The prompts to encode. Can be a single prompt or a sequence for batch processing.
+* `pooling_params` (PoolingParams | Sequence[PoolingParams] | None): The pooling parameters. If None, default parameters are used.
+
+**Returns:**
+
+* `List[EmbeddingRequestOutput]`: A list of embedding outputs containing the embedding vectors in the same order as the input prompts.
+
+**Example:**
+
+```python
+from furiosa_llm import LLM, PoolingParams
+
+with LLM(artifact_path="path/to/embedding/model") as llm:
+    # Single embedding
+    outputs = llm.embed("Hello, world!")
+    embedding = outputs[0].outputs.embedding
+
+    # Batch embedding with normalization disabled
+    params = PoolingParams(normalize=False)
+    outputs = llm.embed(["First text", "Second text"], pooling_params=params)
+```
+
+See the [embedding example](/furiosa-llm/examples/llm-embed) for more details.
+
+### score()
+
+Generate similarity scores for text pairs. This method is only supported for binary classification models,
+including Qwen3-Reranker models or models converted using `as_binary_seq_cls_model`.
+
+**Parameters:**
+
+* `data_1` (PromptType | Sequence[PromptType]): The first input text(s). Can be a single prompt or a list.
+* `data_2` (PromptType | Sequence[PromptType]): The second input text(s) to pair with the first.
+* `truncate_prompt_tokens` (int | None): Maximum number of tokens to truncate the prompt to. If None, no truncation is applied.
+* `pooling_params` (PoolingParams | None): The pooling parameters. If None, default parameters are used.
+* `chat_template` (str | None): Custom chat template for scoring. If None, the model's default template is used.
+
+**Input Patterns:**
+
+* **1-to-1**: Single text paired with single text
+* **1-to-N**: Single text paired with multiple texts (data_1 is replicated N times)
+* **N-to-N**: Multiple texts paired element-wise (both lists must have the same length)
+
+**Returns:**
+
+* `List[ScoringRequestOutput]`: A list of scoring outputs containing similarity scores in the same order as the input pairs.
+
+**Example:**
+
+```python
+from furiosa_llm import LLM, PoolingParams
+
+with LLM(artifact_path="path/to/reranker/model") as llm:
+    # 1-to-N scoring: one query against multiple documents
+    query = "What is machine learning?"
+    documents = [
+        "Machine learning is a subset of AI",
+        "Python is a programming language",
+        "Deep learning uses neural networks"
+    ]
+
+    outputs = llm.score(query, documents)
+    for i, output in enumerate(outputs):
+        print(f"Document {i}: score = {output.outputs.score}")
+```
+
+See the [score example](/furiosa-llm/examples/llm-score) for more details.
