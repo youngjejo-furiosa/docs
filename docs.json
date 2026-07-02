@@ -45,7 +45,49 @@
           "icon": "newspaper"
         }
       ]
-    }
+    },
+    "tabs": [
+      {
+        "tab": "Furiosa Docs",
+        "pages": [
+          "getting-started"
+        ]
+      },
+      {
+        "tab": "Cloud-Native Toolkit",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Furiosa-LLM",
+        "pages": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "index",
+              "quickstart"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Hardware Manual",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction-1"
+            ]
+          }
+        ]
+      }
+    ]
   },
   "logo": {
     "light": "/logo/logo-light-mode.svg",
