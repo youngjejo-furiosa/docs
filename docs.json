@@ -16,6 +16,11 @@
   "icons": {
     "library": "lucide"
   },
+  "fonts": {
+    "family": "ABC Favorit",
+    "source": "/fonts/ABCFavorit-Regular.woff2",
+    "format": "woff2"
+  },
   "styling": {
     "codeblocks": {
       "theme": "css-variables"
