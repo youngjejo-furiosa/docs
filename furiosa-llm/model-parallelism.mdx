@@ -91,7 +91,7 @@ Similarly, `LLM`, `LLMEngine`, `AsyncLLMEngine` allows to specify the degree of 
 Each parallelism type has its own characteristics and constraints.
 
 The `pipeline_parallel_size` parameter can be at most the number of devices.
-The `tensor_parallel_size` parameter can only be 4 or 8 in the 2026.1.0rc2 release;
+The `tensor_parallel_size` parameter can only be 4 or 8 in the 2026.3.0 release;
 future releases will lift this limitation.
 
 The product of `tensor_parallel_size`, `pipeline_parallel_size`, and `data_parallel_size`

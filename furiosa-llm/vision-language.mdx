@@ -9,7 +9,7 @@ import OnlineVlChatCompletion from '/snippets/examples/online_vl_chat_completion
 Furiosa-LLM serves Vision-Language (VL) models that accept text and
 images through the OpenAI-compatible Chat Completions API. The first
 supported architecture is **Qwen3-VL** (e.g.,
-`Qwen/Qwen3-VL-32B-Instruct`); see [Supported Models](/software-stack/supported-models) for the
+`Qwen/Qwen3-VL-32B-Instruct`); see [Supported Models](/furiosa-llm/supported-models) for the
 authoritative list.
 
 Image inputs may be passed as a remote `https://` URL, a base64
@@ -22,8 +22,7 @@ patching, prompt-token expansion) is handled by the Hugging Face
 Launch a server against a compiled VL artifact:
 
 ```bash
-furiosa-llm serve Qwen/Qwen3-VL-32B-Instruct \
-    --fxb /path/to/qwen3-vl-32b.fxb
+furiosa-llm serve furiosa-ai/Qwen3-VL-32B-Instruct
 ```
 
 Send a chat-completion request with an image and a text prompt:
@@ -218,6 +217,6 @@ See [API Reference](/furiosa-llm/reference) for the full API surface.
 
 ## See Also
 
-* [Supported Models](/software-stack/supported-models)
+* [Supported Models](/furiosa-llm/supported-models)
 * [OpenAI-Compatible Server](/furiosa-llm/furiosa-llm-serve)
 * [Quick Start with Furiosa-LLM](/software-stack/get-started/furiosa-llm)

@@ -74,21 +74,26 @@ Build the artifacts for given model configurations.
 - `param_file_max_shard_size`: The maximum size of single parameter file. Parameter file will be
   split into smaller files to be less than this size. The default is "5GB".
 
-## Artifact
-
-{/* TODO: furiosa_llm.artifact.Artifact is not re-exported by the furiosa_llm.artifact package (__init__.py); class extracted from furiosa_llm/artifact/types/next_gen.py */}
+## ArtifactConfig
 
 ```python
-class furiosa_llm.artifact.Artifact(
+class furiosa_llm.artifact.ArtifactConfig(
     *,
-    metadata: ArtifactMetadata,
-    model: ModelArtifact,
-    generator_config: GeneratorConfig,
-    version: SchemaVersion,
+    copies_from_model: list[str] | None = None,
+    copies_from_local: list[os.PathLike] | None = None,
+    bundle_binaries: bool = True,
 )
 ```
 
-**Bases:** `ArtifactBase`
+**Bases:** `pydantic.BaseModel`
+
+Configuration for artifact export.
+
+**Attributes:**
+
+- `copies_from_model`: Relative paths of files to copy from the model directory (e.g., LICENSE.txt).
+- `copies_from_local`: Relative paths of files to copy from the local directory (e.g., README.md).
+- `bundle_binaries`: If True, all compiled binaries will be bundled into a single archive file (binary_bundle.zip) in the output directory.
 
 ## ArtifactMetadata
 

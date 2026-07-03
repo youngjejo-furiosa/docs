@@ -13,7 +13,7 @@ OpenAI's API.
 This document explains how to install and use Furiosa-LLM.
 
 <Warning>
-This document is based on Furiosa SDK 2026.1.0rc2.
+This document is based on Furiosa SDK 2026.3.0.
 The features and APIs described herein are subject to change in the future.
 </Warning>
 
@@ -28,11 +28,9 @@ The minimum requirements for Furiosa-LLM are as follows:
 
 To install the Furiosa-LLM, run the following commands:
 
-{/* TODO: stable-release variant omitted; source has .. only:: stable block */}
-
 ```bash
 pip install --upgrade pip setuptools wheel uv
-uv pip install --prerelease=allow --torch-backend=auto furiosa-llm==2026.1.0rc2
+uv pip install --upgrade --torch-backend=auto furiosa-llm
 ```
 
 ### Authorizing Hugging Face Hub (Optional)

@@ -17,8 +17,8 @@ parsable responses such as JSON data extraction and any-formatted text generatio
 
 Furiosa-LLM supports multiple backends for structured output:
 
-* **llguidance** (default): Efficient constraint enforcement using [llguidance](https://github.com/guidance-ai/llguidance)
-* **xgrammar**: High-performance grammar-guided generation using [XGrammar](https://github.com/mlc-ai/xgrammar)
+* **xgrammar** (default): High-performance grammar-guided generation using [XGrammar](https://github.com/mlc-ai/xgrammar)
+* **llguidance**: Efficient constraint enforcement using [llguidance](https://github.com/guidance-ai/llguidance)
 
 You can select a backend based on your performance and compatibility needs.
 
@@ -40,13 +40,34 @@ with LLM(
     outputs = llm.generate(prompts, sampling_params)
 ```
 
+This option determines which structured output backend to use for structured output.
+
 The available options are:
 
-* `auto` (default): Automatically selects llguidance as the backend
-* `guidance`: Explicitly uses the llguidance backend
-* `xgrammar`: Uses the XGrammar backend
+* `auto` (default): Let engine choose the backend. It currently defaults to xgrammar.
+* `guidance`: Explicitly choose the llguidance backend.
+* `xgrammar`: Explicitly choose the XGrammar backend.
 
-If no backend is specified, `auto` is used, which defaults to llguidance.
+Note that this choice of preferred backend can be overridden in each user request, as explained below.
+
+## Dynamic Backend Choice
+
+Furiosa-LLM supports dynamic, per-request choice of backend. Users can use the field `backend` to specify the backend to use in this request.
+
+If this field is absent or is set to `auto`, the default backend of the server (chosen as explained above) will be used.
+
+```python
+response = client.chat.completions.create(
+   model="my-model",
+   messages=[{"role": "user", "content": "Classify: positive or negative"}],
+   extra_body={
+      "structured_outputs": {
+         "backend": "xgrammar", # or "guidance", "auto"
+         "choice": ["positive", "negative"],
+      }
+   },
+)
+```
 
 ## Supported Methods via OpenAI API
 

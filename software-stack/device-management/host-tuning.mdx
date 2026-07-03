@@ -33,8 +33,8 @@ echo 65536 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
 
 - This adjusts the number of 2MB HugeTLB pages.
 - When using additional caching optimizations involving KV Cache offloading,
-increasing this number may be necessary to ensure sufficient hugepage availability for pinned DMA buffers,
-depending on the size of the allocated host-side KV cache pool.
+  increasing this number may be necessary to ensure sufficient hugepage availability for pinned DMA buffers,
+  depending on the size of the allocated host-side KV cache pool.
 - The allocation can fail (partially or fully) if memory is fragmented; applying
   early after boot usually works best.
 
@@ -58,7 +58,7 @@ sudo sysctl --system
 
 ### When to use this
 
-On some systems(e.g., **NXT RNGD Server**), devices are connected behind a PCIe switch.
+On some systems (e.g., **NXT RNGD Server**), devices are connected behind a PCIe switch.
 If peer-to-peer (P2P) data paths are expected,
 **PCI ACS** enabled on the upstream switch port can prevent or penalize P2P traffic.
 

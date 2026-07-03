@@ -5,13 +5,18 @@ description: "This article describes how to install the prerequisite packages ne
 
 This article describes how to install the prerequisite packages necessary
 for the FuriosaAI software stack, namely the device driver, and firmware.
-These packages are available for Debian and Ubuntu systems.
+These packages are available for Debian/Ubuntu systems (via APT) and for
+Rocky Linux / RHEL systems (via RPM).
 
 ## Requirements
 
 The minimum requirements are as follows:
 
-* Ubuntu 22.04 LTS (or Debian Bookworm) or later
+* A supported Linux distribution:
+
+  * Ubuntu 22.04 LTS (or Debian Bookworm) or later, or
+  * Rocky Linux 10 / RHEL 10
+
 * Linux Kernel 6.3 or later
 * Administrator privileges (root)
 
@@ -37,7 +42,14 @@ sudo apt update && sudo apt install -y pciutils
 sudo update-pciids
 ```
 
-## Setting up APT
+## Setting up the Package Repository
+
+FuriosaAI distributes its packages through both an APT repository (for
+Debian/Ubuntu) and an RPM repository (for Rocky Linux / RHEL). Select the tab
+matching your Linux distribution.
+
+<Tabs>
+<Tab title="APT (Debian/Ubuntu)">
 
 To use the APT server provided by FuriosaAI, follow the steps below:
 
@@ -54,17 +66,82 @@ curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor 
 echo "deb [arch=$(dpkg --print-architecture)] http://asia-northeast3-apt.pkg.dev/projects/furiosa-ai $(. /etc/os-release && echo "$VERSION_CODENAME") main" | sudo tee /etc/apt/sources.list.d/furiosa.list
 ```
 
+</Tab>
+<Tab title="RPM (Rocky Linux)">
+
+FuriosaAI provides an RPM repository for installing the same packages.
+Register it by creating the following repository file:
+
+```bash
+sudo tee /etc/yum.repos.d/furiosa.repo > /dev/null << EOF
+[furiosa]
+name=furiosa
+baseurl=https://asia-northeast3-yum.pkg.dev/projects/furiosa-ai/el10
+enabled=1
+repo_gpgcheck=0
+gpgcheck=0
+EOF
+```
+
+</Tab>
+<Tab title="RPM (RHEL)">
+
+FuriosaAI provides an RPM repository for installing the same packages.
+Register it by creating the following repository file:
+
+```bash
+sudo tee /etc/yum.repos.d/furiosa.repo > /dev/null << EOF
+[furiosa]
+name=furiosa
+baseurl=https://asia-northeast3-yum.pkg.dev/projects/furiosa-ai/el10
+enabled=1
+repo_gpgcheck=0
+gpgcheck=0
+EOF
+```
+
+</Tab>
+</Tabs>
+
 ## Installing Prerequisite Packages
 
-After registering FuriosaAI's APT server as described above, you can now
+After registering FuriosaAI's package repository as described above, you can now
 install the required packages: the device driver, the PE Runtime, and optionally
-the device control/information tool ([furiosa-smi](/software-stack/device-management/furiosa-smi-cli)).
+the device control/information tool ([furiosa-smi](/software-stack/device-management/furiosa-smi-cli)). On RPM
+systems, the commands also install the EPEL repository, which provides the
+kernel-build dependencies.
+
+<Tabs>
+<Tab title="APT (Debian/Ubuntu)">
 
 ```bash
 sudo apt update
 sudo apt install build-essential linux-modules-extra-$(uname -r) linux-headers-$(uname -r)
 sudo apt install furiosa-driver-rngd furiosa-smi
 ```
+
+</Tab>
+<Tab title="RPM (Rocky Linux)">
+
+```bash
+sudo dnf makecache
+sudo dnf install -y epel-release
+sudo dnf install -y dkms gcc make kernel-devel-$(uname -r) kernel-headers-$(uname -r)
+sudo dnf install furiosa-driver-rngd furiosa-smi
+```
+
+</Tab>
+<Tab title="RPM (RHEL)">
+
+```bash
+sudo dnf makecache
+sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
+sudo dnf install -y dkms gcc make kernel-devel-$(uname -r) kernel-headers-$(uname -r)
+sudo dnf install furiosa-driver-rngd furiosa-smi
+```
+
+</Tab>
+</Tabs>
 
 ## Verifying NPU Device Installation
 
@@ -88,22 +165,7 @@ Example output:
 Please refer to [Furiosa SMI CLI](/software-stack/device-management/furiosa-smi-cli) to learn more about the `furiosa-smi`
 command.
 
-## Upgrading Device Firmware
+## Upgrading the Software Stack
 
-Upgrading the firmware can improve the performance and stability of the devices.
-If there is newer firmware in the latest release, you can upgrade it using the
-following commands:
-
-```bash
-sudo apt install furiosa-firmware-tools-rngd furiosa-firmware-image-rngd
-```
-
-Installing the `furiosa-firmware-image-rngd` package will automatically upgrade the firmware.
-The process takes 3 to 5 minutes per device to complete.
-The firmware upgrade process may require a reboot to complete the installation.
-
-<Note>
-Please remember to cold reboot the system after the firmware upgrade process is completed.
-For more information about the firmware upgrade process. If the firmware upgrade process is interrupted,
-the device may become unusable. In this case, please contact FuriosaAI support for assistance.
-</Note>
+To upgrade an existing installation — the driver, firmware, and Furiosa-LLM — see the
+[Upgrading FuriosaAI's Software](/software-stack/get-started/upgrade-guide).

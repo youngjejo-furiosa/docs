@@ -32,7 +32,6 @@
             "pages": [
               "index",
               "software-stack/overview",
-              "software-stack/supported-models",
               "software-stack/roadmap"
             ]
           },
@@ -40,6 +39,8 @@
             "group": "What's New",
             "pages": [
               "software-stack/whats-new",
+              "software-stack/whats-new/release-2026-3",
+              "software-stack/whats-new/release-2026-2",
               "software-stack/whats-new/release-2026-1",
               "software-stack/whats-new/release-2025"
             ]
@@ -70,6 +71,7 @@
             "group": "Furiosa-LLM",
             "pages": [
               "furiosa-llm/intro",
+              "furiosa-llm/supported-models",
               "furiosa-llm/furiosa-llm-serve",
               "furiosa-llm/responses-api",
               "furiosa-llm/toolcalling",
@@ -79,6 +81,7 @@
               "furiosa-llm/hybrid-kv-cache",
               "furiosa-llm/data-parallel-routing",
               "furiosa-llm/model-preparation",
+              "furiosa-llm/fxb",
               "furiosa-llm/model-parallelism"
             ]
           },
@@ -145,6 +148,12 @@
       }
     ]
   },
+  "redirects": [
+    {
+      "source": "/software-stack/supported-models",
+      "destination": "/furiosa-llm/supported-models"
+    }
+  ],
   "logo": {
     "light": "/logo/logo-light-mode.svg",
     "dark": "/logo/logo-dark-mode.svg"

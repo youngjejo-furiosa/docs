@@ -1,12 +1,12 @@
 ---
 title: "Model Preparation"
-description: "To run a trained model, fine-tuned model or quantized model by yourself, Furiosa-LLM needs to convert the model into a model artifact."
+description: "To run your own trained, fine-tuned, or quantized model, you must first convert it into a model artifact using Furiosa-LLM."
 ---
 
 {/* TODO: task noted this page references the model_preparation_workflow.png figure (image copied to /images/), but the source RST contains no figure/image directive; no <img> inserted to preserve fidelity. */}
 
-To run a trained model, fine-tuned model or quantized model by yourself,
-Furiosa-LLM needs to convert the model into a model artifact.
+To run your own trained, fine-tuned, or quantized model, you must first convert
+it into a model artifact using Furiosa-LLM.
 Also, if you want to apply specific optimization configurations or parallelization
 strategies for your workload, you must perform this model preparation step.
 
@@ -18,6 +18,14 @@ strategies for your workload, you must perform this model preparation step.
   [Hugging Face Hub 🤗 - FuriosaAI organization](https://huggingface.co/furiosa-ai).
   You can use these to quickly run LLM models on the Furiosa NPU.
 </Tip>
+
+<Note>
+  The `ArtifactBuilder` / `furiosa-llm build` workflow described on this page is
+  **legacy and scheduled for deprecation**. New work should use the
+  [Furiosa Executable Bundle (FXB)](/furiosa-llm/fxb) format and the `fxb` command instead,
+  which is now the recommended way to build, share, and serve compiled models. The
+  artifact-builder path remains available for backward compatibility for now.
+</Note>
 
 ## Prerequisites
 
@@ -66,7 +74,7 @@ It is typically applied when higher throughput or lower latency is needed. Howev
 model accuracy, it is important to perform thorough experimentation and accuracy evaluations.
 
 Furiosa-LLM currently supports fine-grained FP8 dynamic quantization for causal language models.
-We plan to support more quantization schemes based on llm-compressor in the next releases.
+We plan to support more quantization schemes based on llm-compressor in future releases.
 
 To quantize a model, you first need to load it using the
 `AutoModelForCausalLM.from_pretrained()` method from the `transformers` library.
@@ -108,19 +116,47 @@ The Furiosa-LLM [ArtifactBuilder](/furiosa-llm/reference/artifact-builder) API o
 The `model_id_or_path` parameter accepts either a Hugging Face model ID (e.g., `Qwen/Qwen3-32B`)
 or a local path, allowing you to build artifacts from pre-trained, fine-tuned, or quantized models.
 
-Additionally, the API allows you to define bucket configurations for prefill and decode phases,
-as well as token-wise sequence lengths to optimize the model performance based on your workload.
-You can also specify parallelization strategies such as tensor parallelism and pipeline parallelism
-to efficiently utilize multiple NPUs for inference.
+Starting with 2026.2, `ArtifactBuilder` auto-applies a **model-specific bucket preset**
+when no explicit `BucketConfig` is provided. The preset expands to a set of optimized
+prefill, decode, and append buckets covering the model's full maximum context (or a
+smaller `ModelConfig.max_model_len`, if set). For most users this removes the need to
+specify buckets by hand.
 
-The following example demonstrates how to create a model artifact from a quantized model
-with specific bucket configurations and tensor parallelism settings.
+You can still customize the build: supply an explicit `BucketConfig` to override the
+preset, or use `ModelConfig.max_model_len` to cap the context length of the generated
+buckets. You can also specify parallelization strategies such as tensor parallelism and
+pipeline parallelism via `ParallelConfig` to efficiently utilize multiple NPUs for
+inference.
+
+The simplest path is to rely on the preset and only provide the parallelization
+strategy:
+
+```python
+from furiosa_llm.artifact import ArtifactBuilder, ModelConfig, ParallelConfig
+
+builder = ArtifactBuilder(
+    # Path to the quantized model directory or model ID from Hugging Face Hub
+    model_id_or_path="./qwen3-32b-fp8-dynamic",
+    model_config=ModelConfig(
+        max_model_len=4096,  # Optional: cap the context length of the generated buckets
+    ),
+    parallel_config=ParallelConfig(
+        tensor_parallel_size=32,   # Tensor parallelism degree (32 PEs means 4 NPUs)
+        pipeline_parallel_size=1,  # Pipeline parallelism degree (default: 1)
+    ),
+)
+
+builder.build("./qwen3-32b-fp8-dynamic-artifact")
+```
+
+If you need full control over the bucket shapes, supply a `BucketConfig` explicitly.
+When any bucket field is populated, the preset is skipped and the explicit configuration
+is used as-is:
 
 ```python
 from furiosa_llm.artifact import ArtifactBuilder, BucketConfig, ParallelConfig
 
 builder = ArtifactBuilder(
-    # Path to the quantized model directory or model ID from Hugging Face Hub
     model_id_or_path="./qwen3-32b-fp8-dynamic",
     bucket_config=BucketConfig(
         prefill_buckets=[(1, 128)],  # Prefill bucket configuration
@@ -128,9 +164,9 @@ builder = ArtifactBuilder(
         tokenwise_seq_lens=[128],    # Token-wise sequence lengths
     ),
     parallel_config=ParallelConfig(
-        tensor_parallel_size=32,   # Tensor parallelism degree (32 PEs means 4 NPUs)
-        pipeline_parallel_size=1,  # Pipeline parallelism degree (default: 1)
-    )
+        tensor_parallel_size=32,
+        pipeline_parallel_size=1,
+    ),
 )
 
 builder.build("./qwen3-32b-fp8-dynamic-artifact")
