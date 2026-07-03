@@ -1,0 +1,38 @@
+{/* Synced from furiosa-runtime docs/developer/examples/online_score_rerank.py. Do not hand-edit — CI/CD sync target. */}
+
+```python online_score_rerank.py
+import os
+
+import requests
+
+# Start server with: furiosa-llm serve path/to/reranker-model
+
+base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+
+# Basic reranking
+response = requests.post(
+    f"{base_url}/rerank",
+    json={
+        "model": "reranker",
+        "query": "What is deep learning?",
+        "documents": [
+            "Deep learning is a subset of machine learning using neural networks.",
+            "Python is a popular programming language for data science.",
+            "Machine learning algorithms learn patterns from data.",
+            "Neural networks are inspired by biological neural networks.",
+            "JavaScript is used for web development.",
+        ],
+    },
+)
+
+data = response.json()
+print(f"Model: {data['model']}")
+print(f"Total results: {len(data['results'])}")
+print()
+
+# Results are sorted by relevance (descending)
+for result in data["results"]:
+    print(f"Rank {result['index'] + 1}: score = {result['relevance_score']:.4f}")
+    print(f"  Document: {result['document']['text'][:60]}...")
+    print()
+```

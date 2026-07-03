@@ -1,0 +1,36 @@
+{/* Synced from furiosa-runtime docs/developer/examples/online_chat_completion_structured_output_grammar.py. Do not hand-edit — CI/CD sync target. */}
+
+```python online_chat_completion_structured_output_grammar.py
+import os
+from openai import OpenAI
+
+base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
+client = OpenAI(api_key=api_key, base_url=base_url)
+
+
+# Grammar for SQL SELECT statements
+sql_grammar = """
+root ::= select_statement
+
+select_statement ::= "SELECT " column " FROM " table " WHERE " condition
+
+column ::= "username" | "email"
+
+table ::= "users"
+
+condition ::= "id = " number
+
+number ::= "1" | "2" | "3"
+"""
+
+response = client.chat.completions.create(
+    model=client.models.list().data[0].id,
+    messages=[{"role": "user", "content": "Generate an SQL query to show the 'username' from the 'users' table."}],
+    extra_body={"structured_outputs": {"grammar": sql_grammar}},
+    temperature=0.0,
+    max_tokens=100
+)
+
+print(response.choices[0].message.content)
+```

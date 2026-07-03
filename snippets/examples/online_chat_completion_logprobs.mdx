@@ -1,0 +1,121 @@
+{/* Synced from furiosa-runtime docs/developer/examples/online_chat_completion_logprobs.py. Do not hand-edit — CI/CD sync target. */}
+
+```python online_chat_completion_logprobs.py
+"""
+OpenAI-Compatible Server - Chat Completion API with Logprobs Example
+
+This example demonstrates how to use both:
+1. logprobs: Log probabilities for generated tokens (standard OpenAI parameter)
+2. prompt_logprobs: Log probabilities for prompt tokens (vLLM extension)
+
+Model: Any model available on the server
+Endpoint: http://localhost:8000
+"""
+
+import os
+from openai import OpenAI
+
+base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
+
+client = OpenAI(base_url=base_url, api_key=api_key)
+
+# Get available model
+models = client.models.list()
+model_name = models.data[0].id
+print(f"Using model: {model_name}")
+print()
+
+# Chat completion request with both logprobs and prompt_logprobs
+response = client.chat.completions.create(
+    model=model_name,
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "What is the capital of France?"},
+    ],
+    max_tokens=16,
+    temperature=0.0,
+    # Standard OpenAI parameter: logprobs for generated tokens
+    logprobs=True,
+    top_logprobs=3,  # Return top 3 alternatives for each generated token
+    # vLLM/Furiosa-LLM extension parameters
+    extra_body={
+        "prompt_logprobs": 3,  # Top 3 logprobs per prompt token
+        "return_token_ids": True,  # Return prompt token IDs
+    },
+)
+
+# Print generated text
+print("=" * 80)
+print(f"Generated text: {response.choices[0].message.content}")
+print("=" * 80)
+print()
+
+# =========================================================================
+# Section 1: Generated Token Logprobs (Standard OpenAI)
+# =========================================================================
+print("=== Generated Token Logprobs (Standard OpenAI) ===")
+print("These show the model's confidence for each token it generated.\n")
+
+logprobs_content = response.choices[0].logprobs
+if logprobs_content and logprobs_content.content:
+    for idx, token_info in enumerate(logprobs_content.content):
+        print(
+            f"Position {idx}: '{token_info.token}' (logprob={token_info.logprob:.6f})"
+        )
+
+        # Show alternative tokens the model considered
+        if token_info.top_logprobs:
+            for alt in token_info.top_logprobs:
+                marker = " <-- chosen" if alt.token == token_info.token else ""
+                print(f"    '{alt.token}': logprob={alt.logprob:.6f}{marker}")
+        print()
+else:
+    print("No logprobs in response")
+print()
+
+# =========================================================================
+# Section 2: Prompt Token Logprobs (vLLM Extension)
+# =========================================================================
+print("=== Prompt Token Logprobs (vLLM Extension) ===")
+print("These show how likely each prompt token was, given the preceding context.\n")
+
+# Access vLLM extension fields directly from response object
+prompt_logprobs = response.prompt_logprobs  # type: ignore[attr-defined]
+prompt_token_ids = response.prompt_token_ids  # type: ignore[attr-defined]
+
+if prompt_logprobs:
+    for idx, token_logprobs in enumerate(prompt_logprobs):
+        actual_token_id = prompt_token_ids[idx] if prompt_token_ids else None
+
+        if token_logprobs is None:
+            # First token has no logprobs (no prior context)
+            print(
+                f"Position {idx}: token_id={actual_token_id} "
+                f"-> None (first token, no prior context)"
+            )
+            continue
+
+        print(f"Position {idx}: token_id={actual_token_id}")
+
+        # token_logprobs is in dict[token_id, Logprob] format
+        for token_id_str, logprob_info in token_logprobs.items():
+            token_id = int(token_id_str)
+            logprob = logprob_info["logprob"]
+            rank = logprob_info.get("rank")
+            decoded_token = logprob_info.get("decoded_token", "")
+            escaped_token = repr(decoded_token)[1:-1]
+
+            is_actual = token_id == actual_token_id
+            actual_marker = " <-- actual" if is_actual else ""
+            print(
+                f"    token_id={token_id:>6}, "
+                f"token='{escaped_token}', "
+                f"logprob={logprob:>10.6f}, "
+                f"rank={rank}{actual_marker}"
+            )
+    print()
+else:
+    print("No prompt_logprobs in response (vLLM extension field)")
+print()
+```

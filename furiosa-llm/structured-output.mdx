@@ -1,6 +1,12 @@
 ---
 title: "Structured Output"
+description: "Furiosa-LLM supports structured output generation, enabling you to constrain the model's output to follow specific formats, schemas, or patterns."
 ---
+
+import OnlineChatCompletionStructuredOutputChoice from '/snippets/examples/online_chat_completion_structured_output_choice.mdx';
+import OnlineChatCompletionStructuredOutputRegex from '/snippets/examples/online_chat_completion_structured_output_regex.mdx';
+import OnlineChatCompletionStructuredOutputJson from '/snippets/examples/online_chat_completion_structured_output_json.mdx';
+import OnlineChatCompletionStructuredOutputGrammar from '/snippets/examples/online_chat_completion_structured_output_grammar.mdx';
 
 Furiosa-LLM supports structured output generation, enabling you to constrain
 the model's output to follow specific formats, schemas, or patterns.
@@ -59,26 +65,7 @@ The `choice` field in `structured_outputs` constrains the model output to be one
 
 **Usage Example:**
 
-```python
-import os
-from openai import OpenAI
-
-base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
-api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
-client = OpenAI(api_key=api_key, base_url=base_url)
-
-# Sample review to classify
-review = "This movie was absolutely fantastic!"
-
-response = client.chat.completions.create(
-    model=client.models.list().data[0].id,
-    messages=[{"role": "user", "content": f"Classify sentiment: '{review}'"}],
-    extra_body={"structured_outputs": {"choice": ["positive", "negative", "neutral"]}},
-    temperature=0.0,
-)
-
-print(response.choices[0].message.content)
-```
+<OnlineChatCompletionStructuredOutputChoice />
 
 **Use Cases:**
 
@@ -93,26 +80,7 @@ The `regex` field in `structured_outputs` ensures the generated text matches a s
 
 **Usage Example:**
 
-```python
-import os
-from openai import OpenAI
-
-base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
-api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
-client = OpenAI(api_key=api_key, base_url=base_url)
-
-# Email address pattern
-email_pattern = r"[a-z0-9.]{1,20}@\w{6,10}\.com\n"
-
-response = client.chat.completions.create(
-    model=client.models.list().data[0].id,
-    messages=[{"role": "user", "content": "Generate an email address for Ada Lovelace, who works in Analytical. End in .com and new line. Example result: 'ada.lovelace@analytical.com\n'"}],
-    extra_body={"structured_outputs": {"regex": email_pattern}},
-    temperature=0.0,
-)
-
-print(response.choices[0].message.content)
-```
+<OnlineChatCompletionStructuredOutputRegex />
 
 **Use Cases:**
 
@@ -128,43 +96,7 @@ The `json` field in `structured_outputs` is the most commonly used structured ou
 
 **Usage Example:**
 
-```python
-import enum
-import json
-import os
-from openai import OpenAI
-import pydantic
-
-base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
-api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
-client = OpenAI(api_key=api_key, base_url=base_url)
-
-class Color(str, enum.Enum):
-    BLUE = "blue"
-    GREEN = "green"
-    PURPLE = "purple"
-
-class FruitDescription(pydantic.BaseModel):
-    name: str
-    color: Color
-    taste: str
-
-response = client.chat.completions.create(
-    model=client.models.list().data[0].id,
-    messages=[{"role": "user", "content": "Generate a JSON with the name, color, and taste of your favorite fruit."}],
-    response_format={
-        "type": "json_schema",
-        "json_schema": {
-            "name": "fruit-description",
-            "schema": FruitDescription.model_json_schema(),
-        },
-    },
-    temperature=0.0,
-)
-
-result = json.loads(response.choices[0].message.content)
-print(json.dumps(result, indent=2))
-```
+<OnlineChatCompletionStructuredOutputJson />
 
 **Use Cases:**
 
@@ -186,40 +118,7 @@ The llguidance backend currently supports multiple grammar formats:
 
 **Usage Example:**
 
-```python
-import os
-from openai import OpenAI
-
-base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
-api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
-client = OpenAI(api_key=api_key, base_url=base_url)
-
-
-# Grammar for SQL SELECT statements
-sql_grammar = """
-root ::= select_statement
-
-select_statement ::= "SELECT " column " FROM " table " WHERE " condition
-
-column ::= "username" | "email"
-
-table ::= "users"
-
-condition ::= "id = " number
-
-number ::= "1" | "2" | "3"
-"""
-
-response = client.chat.completions.create(
-    model=client.models.list().data[0].id,
-    messages=[{"role": "user", "content": "Generate an SQL query to show the 'username' from the 'users' table."}],
-    extra_body={"structured_outputs": {"grammar": sql_grammar}},
-    temperature=0.0,
-    max_tokens=100
-)
-
-print(response.choices[0].message.content)
-```
+<OnlineChatCompletionStructuredOutputGrammar />
 
 The example above uses EBNF format with the `::=` notation. You can also use Lark format with different syntax rules depending on your grammar complexity requirements.
 

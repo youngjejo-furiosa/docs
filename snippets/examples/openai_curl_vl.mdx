@@ -1,0 +1,25 @@
+{/* Synced from furiosa-runtime docs/developer/examples/openai_curl_vl.sh. Do not hand-edit — CI/CD sync target. */}
+
+```bash openai_curl_vl.sh
+curl http://localhost:8000/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d '{
+    "model": "Qwen/Qwen3-VL-32B-Instruct",
+    "messages": [
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://developer.furiosa.ai/v2026.2.0/en/_images/Furiosa_RNGD_image.png"
+                    }
+                },
+                {"type": "text", "text": "Describe this image in one short sentence."}
+            ]
+        }
+    ],
+    "max_tokens": 128
+    }' \
+    | python -m json.tool
+```

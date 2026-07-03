@@ -1,0 +1,11 @@
+{/* Synced from furiosa-runtime docs/developer/examples/openai_curl.sh. Do not hand-edit — CI/CD sync target. */}
+
+```bash openai_curl.sh
+curl http://localhost:8000/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d '{
+    "model": "EMPTY",
+    "messages": [{"role": "user", "content": "What is the capital of France?"}]
+    }' \
+    | python -m json.tool
+```

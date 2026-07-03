@@ -1,6 +1,10 @@
 ---
 title: "Scoring (Similarity Scoring)"
+description: "This example demonstrates how to use the `LLM.score()` method for calculating similarity scores between text pairs."
 ---
+
+import OfflineScore from '/snippets/examples/offline_score.mdx';
+import OnlineScore from '/snippets/examples/online_score.mdx';
 
 This example demonstrates how to use the `LLM.score()` method for calculating similarity scores between text pairs.
 This is applicable to binary classification models, including Qwen3-Reranker models or models converted using `as_binary_seq_cls_model`.
@@ -9,70 +13,7 @@ This is applicable to binary classification models, including Qwen3-Reranker mod
 
 The following example demonstrates 1-to-1, 1-to-N, and N-to-N scoring with PoolingParams:
 
-```python Example of using LLM.score() for similarity scoring
-from furiosa_llm import LLM, PoolingParams
-
-# Load a reranker or binary classification model
-with LLM("furiosa-ai/Qwen3-Reranker-8B") as llm:
-    # ============================================================
-    # Example 1: 1-to-1 scoring (single query, single document)
-    # ============================================================
-    query = "What is machine learning?"
-    document = "Machine learning is a subset of artificial intelligence."
-    outputs = llm.score(query, document)
-    print(f"Similarity score: {outputs[0].outputs.score}")
-    print("-" * 80)
-
-    # ============================================================
-    # Example 2: 1-to-N scoring (single query, multiple documents)
-    # ============================================================
-    query = "What is deep learning?"
-    documents = [
-        "Deep learning uses neural networks with multiple layers.",
-        "Python is a popular programming language.",
-        "Machine learning is a field of artificial intelligence.",
-        "Neural networks are inspired by the human brain.",
-    ]
-    outputs = llm.score(query, documents)
-    for i, output in enumerate(outputs):
-        print(f"Document {i}: score = {output.outputs.score:.4f}")
-        print(f"  Text: {documents[i][:50]}...")
-    print("-" * 80)
-
-    # ============================================================
-    # Example 3: N-to-N scoring (multiple queries, paired documents)
-    # ============================================================
-    queries = [
-        "What is Python?",
-        "What is JavaScript?",
-        "What is SQL?",
-    ]
-    documents = [
-        "Python is a programming language.",
-        "JavaScript is used for web development.",
-        "SQL is a database query language.",
-    ]
-    outputs = llm.score(queries, documents)
-    for i, (q, d, output) in enumerate(zip(queries, documents, outputs)):
-        print(f"Pair {i}: score = {output.outputs.score:.4f}")
-        print(f"  Query: {q}")
-        print(f"  Document: {d}")
-    print("-" * 80)
-
-    # ============================================================
-    # Example 4: Using PoolingParams for truncation
-    # ============================================================
-    # Truncate long documents to fit within model limits
-    pooling_params = PoolingParams(truncate_prompt_tokens=512)
-    query = "What is the capital of France?"
-    long_documents = [
-        "Paris is the capital and most populous city of France. " * 50,  # Long document
-        "London is the capital of the United Kingdom. " * 50,
-    ]
-    outputs = llm.score(query, long_documents, pooling_params=pooling_params)
-    for i, output in enumerate(outputs):
-        print(f"Document {i} score: {output.outputs.score:.4f}")
-```
+<OfflineScore />
 
 ## Use Cases
 
@@ -90,32 +31,6 @@ For ranking multiple documents by relevance, see [Rerank API example](/furiosa-l
 
 You can also use the scoring functionality through the OpenAI-compatible server:
 
-```python Example of using Score API for similarity scoring
-import os
-
-import requests
-
-# Start server with: furiosa-llm serve path/to/reranker-model
-
-base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
-
-# 1-to-N scoring via HTTP API
-response = requests.post(
-    f"{base_url}/score",
-    json={
-        "model": "reranker",
-        "text_1": "What is machine learning?",
-        "text_2": [
-            "Machine learning is a subset of AI.",
-            "Python is a programming language.",
-            "Deep learning uses neural networks.",
-        ],
-    },
-)
-
-data = response.json()
-for item in data["data"]:
-    print(f"Index {item['index']}: score = {item['score']:.4f}")
-```
+<OnlineScore />
 
 See [Score API Reference](/furiosa-llm/furiosa-llm-serve#score-api-score-v1score) for complete server API documentation.

@@ -1,6 +1,10 @@
 ---
 title: "Embedding"
+description: "This example demonstrates how to generate embeddings using the `LLM.embed()` method."
 ---
+
+import OfflineEmbed from '/snippets/examples/offline_embed.mdx';
+import OnlineEmbed from '/snippets/examples/online_embed.mdx';
 
 This example demonstrates how to generate embeddings using the `LLM.embed()` method.
 Embeddings are dense vector representations of text that capture semantic meaning,
@@ -8,77 +12,12 @@ useful for similarity search, clustering, and retrieval applications.
 
 The following example demonstrates basic usage, batch embedding, normalization, and truncation:
 
-```python Example of using LLM.embed() for embedding generation
-from furiosa_llm import LLM, PoolingParams
-
-# Load an embedding model
-with LLM("furiosa-ai/Qwen3-Embedding-8B") as llm:
-    # ============================================================
-    # Example 1: Single prompt embedding
-    # ============================================================
-    prompt = "What is the capital of France?"
-    output = llm.embed(prompt)
-    embedding = output[0].outputs.embedding
-    print(f"Prompt: {prompt!r}")
-    print(f"Embedding dimension: {len(embedding)}")
-    print(f"Embedding (first 10 values): {embedding[:10]}")
-    print("-" * 80)
-
-    # ============================================================
-    # Example 2: Batch embedding (multiple prompts)
-    # ============================================================
-    prompts = [
-        "What is the capital of France?",
-        "What is the capital of Germany?",
-        "What is the capital of Italy?",
-    ]
-    outputs = llm.embed(prompts)
-    for prompt, output in zip(prompts, outputs):
-        embedding = output.outputs.embedding
-        print(f"Prompt: {prompt!r}")
-        print(f"Embedding dimension: {len(embedding)}")
-        print(f"Embedding (first 5 values): {embedding[:5]}")
-    print("-" * 80)
-
-    # ============================================================
-    # Example 3: Using PoolingParams for truncation
-    # ============================================================
-    # Truncate long prompts to fit within token limits
-    pooling_params = PoolingParams(truncate_prompt_tokens=128)
-    long_prompts = [
-        "This is a very long text that might exceed the model's context window. " * 50,
-        "Another lengthy document that needs to be truncated for processing. " * 50,
-    ]
-    outputs = llm.embed(long_prompts, pooling_params=pooling_params)
-    for i, output in enumerate(outputs):
-        embedding = output.outputs.embedding
-        print(f"Long prompt {i}: embedding dimension = {len(embedding)}")
-```
+<OfflineEmbed />
 
 ## Server API Example
 
 You can also generate embeddings through the OpenAI-compatible server:
 
-```python Example of using OpenAI-compatible API for embedding generation
-import os
-
-from openai import OpenAI
-
-# Start server with: furiosa-llm serve path/to/embedding/model
-
-base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
-api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
-
-client = OpenAI(base_url=base_url, api_key=api_key)
-
-response = client.embeddings.create(
-    model="embedding-model",
-    input=["Text 1", "Text 2", "Text 3"],
-)
-
-for data in response.data:
-    embedding = data.embedding
-    print(f"Index {data.index}: {len(embedding)} dimensions")
-```
+<OnlineEmbed />
 
 See [Embeddings API Reference](/furiosa-llm/furiosa-llm-serve#embeddings-api-v1embeddings) for complete server API documentation.

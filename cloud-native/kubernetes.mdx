@@ -1,5 +1,6 @@
 ---
 title: "Kubernetes Plugins"
+description: "We do support the following versions of Kubernetes and CRI runtime"
 ---
 
 ## Kubernetes Support
@@ -68,11 +69,23 @@ managing them using taint and toleration,or modify the NPU plugins Helm chart to
 
 See the following links for more information and configurations of each plugin:
 
-- [Installing Furiosa Feature Discovery](/cloud-native/kubernetes/feature-discovery)
-- [Installing Furiosa Device Plugin](/cloud-native/kubernetes/device-plugin)
-- [Installing Furiosa DRA Driver](/cloud-native/kubernetes/dra-driver)
-- [Installing Furiosa Metrics Exporter](/cloud-native/kubernetes/metrics-exporter)
-- [Installing Furiosa NPU Operator](/cloud-native/kubernetes/npu-operator)
+<Columns cols={2}>
+  <Card title="Installing Furiosa Feature Discovery" href="/cloud-native/kubernetes/feature-discovery">
+    The Furiosa Feature Discovery automatically labels Kubernetes nodes with information about FuriosaAI NPU properties, such as the NPU family, count, and various versions.
+  </Card>
+  <Card title="Installing Furiosa Device Plugin" href="/cloud-native/kubernetes/device-plugin">
+    The Furiosa device plugin implements the Kubernetes Device Plugin interface for FuriosaAI NPU devices.
+  </Card>
+  <Card title="Installing Furiosa DRA Driver" href="/cloud-native/kubernetes/dra-driver">
+    The Furiosa DRA Driver implements the Kubernetes DRA interface for FuriosaAI NPU devices.
+  </Card>
+  <Card title="Installing Furiosa Metrics Exporter" href="/cloud-native/kubernetes/metrics-exporter">
+    The Furiosa metrics exporter exposes collection of metrics related to FuriosaAI NPU devices in Prometheus format.
+  </Card>
+  <Card title="Installing Furiosa NPU Operator" href="/cloud-native/kubernetes/npu-operator">
+    The Furiosa NPU Operator is a Kubernetes operator that automates the deployment and management of FuriosaAI NPU devices within a Kubernetes cluster.
+  </Card>
+</Columns>
 
 Once you have installed the NPU plugins, your cluster exposes Furiosa NPUs as schedulable resources, such as `furiosa.ai/rngd`.
 

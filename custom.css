@@ -1,37 +1,46 @@
 /* Hand-maintained overrides. style.css is generated — do not merge this in. */
 
 /*
- * Sidebar nav scrollbar (#sidebar-content is Mintlify's stable ID for the
- * scrollable sidebar area): invisible at rest, thin muted thumb on hover.
+ * Sidebar nav + table-of-contents scrollbars (#sidebar-content and
+ * #table-of-contents are Mintlify's stable IDs for the scrollable
+ * areas): invisible at rest, thin muted thumb on hover.
  * Scrolling itself is unaffected.
  *
  * Firefox + Chrome ≥121 use the standard scrollbar-* properties; Safari
  * falls back to the ::-webkit-scrollbar rules.
  */
-#sidebar-content {
+#sidebar-content,
+#table-of-contents {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
-#sidebar-content:hover {
+#sidebar-content:hover,
+#table-of-contents:hover {
   scrollbar-color: var(--ui-neutral-250, #c6c6c6) transparent;
 }
-.dark #sidebar-content:hover {
+.dark #sidebar-content:hover,
+.dark #table-of-contents:hover {
   scrollbar-color: var(--ui-neutral-800, #2d2d2d) transparent;
 }
 
-#sidebar-content::-webkit-scrollbar {
+#sidebar-content::-webkit-scrollbar,
+#table-of-contents::-webkit-scrollbar {
   width: 5px;
 }
-#sidebar-content::-webkit-scrollbar-track {
+#sidebar-content::-webkit-scrollbar-track,
+#table-of-contents::-webkit-scrollbar-track {
   background: transparent;
 }
-#sidebar-content::-webkit-scrollbar-thumb {
+#sidebar-content::-webkit-scrollbar-thumb,
+#table-of-contents::-webkit-scrollbar-thumb {
   background: transparent;
   border-radius: var(--ui-radius-full, 9999px);
 }
-#sidebar-content:hover::-webkit-scrollbar-thumb {
+#sidebar-content:hover::-webkit-scrollbar-thumb,
+#table-of-contents:hover::-webkit-scrollbar-thumb {
   background: var(--ui-neutral-250, #c6c6c6);
 }
-.dark #sidebar-content:hover::-webkit-scrollbar-thumb {
+.dark #sidebar-content:hover::-webkit-scrollbar-thumb,
+.dark #table-of-contents:hover::-webkit-scrollbar-thumb {
   background: var(--ui-neutral-800, #2d2d2d);
 }

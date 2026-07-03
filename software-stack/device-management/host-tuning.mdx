@@ -1,6 +1,9 @@
 ---
 title: "Host PCI Optimization Tuning"
+description: "This document describes a set of host-level tuning steps commonly used to improve PCIe/DMA/P2P performance and reduce latency variance on Linux servers."
 ---
+
+import FuriosaAcsClear from '/snippets/examples/furiosa-acs-clear.mdx';
 
 This document describes a set of host-level tuning steps commonly used to improve
 PCIe/DMA/P2P performance and reduce latency variance on Linux servers.
@@ -149,68 +152,7 @@ SUBSYSTEM=="rngd_mgmt", ATTR{device_type}=="RNGD", ACTION=="add", ENV{BUSNAME}="
 
 Create a script file such as `/usr/local/sbin/furiosa-acs-clear`:
 
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-if [[ -z "${BUSNAME:-}" ]]; then
-  echo "Error: BUSNAME is not set" >&2
-  exit 1
-fi
-
-DEVICE_ROOT="/sys/bus/pci/devices"
-DEVICE_PATH="${DEVICE_ROOT}/${BUSNAME}"
-if [[ ! -e "$DEVICE_PATH" ]]; then
-  echo "Error: PCI device not found: ${DEVICE_PATH}" >&2
-  exit 2
-fi
-
-READLINK=$(readlink ${DEVICE_PATH} 2>/dev/null)
-if [ -z "$READLINK" ]; then
-  echo "Error: Unable to read link for ${DEVICE_PATH}"
-  exit 3
-fi
-
-PARENT_BDF=$(basename $(dirname $READLINK))
-PARENT_PATH="${DEVICE_ROOT}/${PARENT_BDF}"
-if [[ ! -e "${PARENT_PATH}" ]]; then
-  echo "Error: Parent device not found: ${PARENT_PATH}" >&2
-  exit 4
-fi
-
-if [[ ! -r "${PARENT_PATH}/vendor" || ! -r "${PARENT_PATH}/device" ]]; then
-  echo "Error: Cannot read vendor/device IDs for ${PARENT_BDF}" >&2
-  exit 5
-fi
-
-VENDOR_ID=$(cat ${PARENT_PATH}/vendor)
-DEVICE_ID=$(cat ${PARENT_PATH}/device)
-
-if [[ "${VENDOR_ID,,}" != "0x1000" ]]; then
-  echo "Error: Parent device ${PARENT_BDF} vendor_id is '${VENDOR_ID}', expected '0x1000'" >&2
-  exit 6
-fi
-
-if [[ "${DEVICE_ID,,}" != "0xc030" ]]; then
-  echo "Error: Parent device ${PARENT_BDF} device_id is '${DEVICE_ID}', expected '0xc030'" >&2
-  exit 6
-fi
-
-ACS_OFFSET="0x176"
-CURRENT_ACS=$(setpci -s ${PARENT_BDF} ${ACS_OFFSET}.W)
-
-if [[ -z "${CURRENT_ACS}" ]]; then
-  echo "Error: Failed to read ACS register on ${PARENT_BDF}" >&2
-  exit 7
-fi
-
-if [[ "${CURRENT_ACS}" == "0000" ]]; then
-  echo "already set on ${PARENT_BDF}"
-else
-  setpci -s ${PARENT_BDF} ${ACS_OFFSET}.W=0x0
-  echo "ACS clear for ${PARENT_BDF} completed"
-fi
-```
+<FuriosaAcsClear />
 
 ## 3. tuned-adm: latency-performance Profile
 

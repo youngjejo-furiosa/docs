@@ -1,5 +1,6 @@
 ---
 title: "Deploying Furiosa-LLM with llm-d"
+description: "llm-d is a Kubernetes-native distributed inference framework that lets you serve LLM models across a cluster."
 ---
 
 [llm-d](https://llm-d.ai/) is a Kubernetes-native distributed inference framework that lets you serve LLM models across a cluster. Adopting llm-d as a distributed inference framework can provide the following benefits:
@@ -55,7 +56,8 @@ helm repo add furiosa https://furiosa-ai.github.io/helm-charts
 helm repo update
 ```
 
-### Step 1: Set up Gateway API CRDs
+<Steps>
+<Step title="Step 1: Set up Gateway API CRDs">
 
 llm-d utilizes Kubernetes' [Gateway API Inference Extension (GIE)](https://gateway-api-inference-extension.sigs.k8s.io/). Appropriate CRDs need to be installed in the cluster.
 
@@ -68,7 +70,8 @@ kubectl apply -f \
     https://github.com/kubernetes-sigs/gateway-api-inference-extension/releases/download/v1.3.0/manifests.yaml
 ```
 
-### Step 2: Deploy GIE-compatible Gateway
+</Step>
+<Step title="Step 2: Deploy GIE-compatible Gateway">
 
 A list of GIE-compatible gateways can be found [here](https://gateway-api-inference-extension.sigs.k8s.io/implementations/gateways/).
 For this guide, we will deploy Istio as the GIE-compatible gateway. Install the base chart first, then the discovery chart (istiod) with GIE enabled.
@@ -98,7 +101,8 @@ pilot:
 helm install istiod istio/istiod -f /path/to/istiod.yaml -n istio-system --wait
 ```
 
-### Step 3: Prepare Kubernetes Secret
+</Step>
+<Step title="Step 3: Prepare Kubernetes Secret">
 
 We will use `llm-d` namespace to deploy llm-d with llm-d-modelservice Helm chart.
 Create a Kubernetes secret for your Hugging Face token:
@@ -126,7 +130,8 @@ kubectl create namespace llm-d
 kubectl apply -f /path/to/hf-secret.yaml -n llm-d
 ```
 
-### Step 4: Download the Target LLM Model
+</Step>
+<Step title="Step 4: Download the Target LLM Model">
 
 Furiosa-LLM deployed using llm-d-modelservice can utilize PVCs to pre-download Hugging Face models.
 In this guide, we will pre-download the `furiosa-ai/Llama-3.1-8B-Instruct` model from Hugging Face Hub.
@@ -203,7 +208,8 @@ kubectl apply -f /path/to/model-downloader.yaml -n llm-d
 Wait for the model download to complete before proceeding (e.g. check the pod status with `kubectl get pods -n llm-d` and logs with `kubectl logs model-downloader -n llm-d -c download-model`).
 For detailed instructions on how to pre-download a model on PVCs, please refer to the [upstream documentation](https://github.com/llm-d-incubation/llm-d-modelservice/blob/llm-d-modelservice-v0.3.18/examples/pvc/README.md).
 
-### Step 5: Deploy llm-d
+</Step>
+<Step title="Step 5: Deploy llm-d">
 
 First, we need to deploy the llm-d Inference Scheduler to the namespace using the Helm chart. Prior to deploying the Inference Scheduler, the llm-d-infra Helm chart must be deployed.
 
@@ -342,7 +348,8 @@ helm install ms furiosa/llm-d-modelservice -n llm-d -f /path/to/llm-d-modelservi
 
 llm-d-modelservice Helm chart provides more configuration knobs other than the ones shown in the example above. Please refer to the [llm-d-modelservice Helm chart documentation](https://github.com/furiosa-ai/helm-charts/blob/llm-d-modelservice-2026.1.0/charts/llm-d-modelservice/README.md) for details.
 
-### Step 6: Expose the service with an HTTPRoute
+</Step>
+<Step title="Step 6: Expose the service with an HTTPRoute">
 
 Create an HTTPRoute so that inference requests are routed to the llm-d Inference Scheduler:
 
@@ -377,3 +384,5 @@ kubectl apply -f /path/to/httproute.yaml -n llm-d
 ```
 
 After the route is applied, you can send inference requests to the Gateway address (e.g. via the Istio ingress). For details on how to obtain the Gateway URL and call the API, see the llm-d [Inference Against llm-d](https://github.com/llm-d/llm-d/blob/v0.5.0/docs/getting-started-inferencing.md) guide.
+</Step>
+</Steps>

@@ -1,5 +1,6 @@
 ---
 title: "Welcome to Furiosa Docs"
+description: "FuriosaAI offers a streamlined software stack designed for deep learning model inference on FuriosaAI NPUs."
 ---
 
 Welcome!
@@ -31,57 +32,127 @@ deployment.
 
 <img src="/images/SW_stack_3D.png" alt="FuriosaAI Software Stack" />
 
-- [RNGD](/hardware/rngd): RNGD Hardware Specification, and features
-- [Software Stack](/software-stack/overview): An overview of the FuriosaAI software stack
-- [Supported Models](/software-stack/supported-models): A list of supported models
-- [What's New](/software-stack/whats-new): New features and changes in the latest release
-- [Roadmap](/software-stack/roadmap): The future roadmap of FuriosaAI Software Stack
+<Columns cols={2}>
+  <Card title="RNGD" href="/hardware/rngd">
+    RNGD Hardware Specification, and features
+  </Card>
+  <Card title="Software Stack" href="/software-stack/overview">
+    An overview of the FuriosaAI software stack
+  </Card>
+  <Card title="Supported Models" href="/software-stack/supported-models">
+    A list of supported models
+  </Card>
+  <Card title="What's New" href="/software-stack/whats-new">
+    New features and changes in the latest release
+  </Card>
+  <Card title="Roadmap" href="/software-stack/roadmap">
+    The future roadmap of FuriosaAI Software Stack
+  </Card>
+</Columns>
 
 ## Get Started
 
-- [Installing Prerequisites](/software-stack/get-started/prerequisites): How to install the prerequisites for FuriosaAI Software Stack
-- [Upgrade Guide](/software-stack/get-started/upgrade-guide): How to upgrade the FuriosaAI Software Stack
-- [Getting Started with Furiosa-LLM](/software-stack/get-started/furiosa-llm)
+<Columns cols={2}>
+  <Card title="Installing Prerequisites" href="/software-stack/get-started/prerequisites">
+    How to install the prerequisites for FuriosaAI Software Stack
+  </Card>
+  <Card title="Upgrade Guide" href="/software-stack/get-started/upgrade-guide">
+    How to upgrade the FuriosaAI Software Stack
+  </Card>
+  <Card title="Getting Started with Furiosa-LLM" href="/software-stack/get-started/furiosa-llm" />
+</Columns>
 
 ## Furiosa-LLM
 
-- [Furiosa-LLM](/furiosa-llm/intro): An introduction to Furiosa-LLM
-- [OpenAI-Compatible Server](/furiosa-llm/furiosa-llm-serve): More details about the OpenAI-compatible server and its features
-- [Tool Calling](/furiosa-llm/toolcalling): Guide to tool calling with parsers and choice options
-- [Structured Output](/furiosa-llm/structured-output): Guide to structured output generation
-- [Vision-Language Models](/furiosa-llm/vision-language): Guide to serving Vision-Language models with image inputs
-- [Prefix Caching](/furiosa-llm/prefix-caching): Guide to prefix caching for improved performance
-- [Hybrid KV Cache](/furiosa-llm/hybrid-kv-cache): Understanding hybrid KV cache management
-- [Data-Parallel Routing](/furiosa-llm/data-parallel-routing): Understanding scoring-based data-parallel routing
-- [Model Preparation](/furiosa-llm/model-preparation): How to prepare LLM models to be served by Furiosa-LLM
-- [Model Parallelism](/furiosa-llm/model-parallelism): Tensor/Pipeline/Data parallelism in Furiosa-LLM
-- [API Reference](/furiosa-llm/reference): The Python API reference for Furiosa-LLM
-- [Examples](/furiosa-llm/examples): Examples of using Furiosa-LLM
-- [Kubernetes Deployment](/cloud-native/k8s-deployment): A guide to deploying Furiosa-LLM on Kubernetes
+<Columns cols={2}>
+  <Card title="Furiosa-LLM" href="/furiosa-llm/intro">
+    An introduction to Furiosa-LLM
+  </Card>
+  <Card title="OpenAI-Compatible Server" href="/furiosa-llm/furiosa-llm-serve">
+    More details about the OpenAI-compatible server and its features
+  </Card>
+  <Card title="Tool Calling" href="/furiosa-llm/toolcalling">
+    Guide to tool calling with parsers and choice options
+  </Card>
+  <Card title="Structured Output" href="/furiosa-llm/structured-output">
+    Guide to structured output generation
+  </Card>
+  <Card title="Vision-Language Models" href="/furiosa-llm/vision-language">
+    Guide to serving Vision-Language models with image inputs
+  </Card>
+  <Card title="Prefix Caching" href="/furiosa-llm/prefix-caching">
+    Guide to prefix caching for improved performance
+  </Card>
+  <Card title="Hybrid KV Cache" href="/furiosa-llm/hybrid-kv-cache">
+    Understanding hybrid KV cache management
+  </Card>
+  <Card title="Data-Parallel Routing" href="/furiosa-llm/data-parallel-routing">
+    Understanding scoring-based data-parallel routing
+  </Card>
+  <Card title="Model Preparation" href="/furiosa-llm/model-preparation">
+    How to prepare LLM models to be served by Furiosa-LLM
+  </Card>
+  <Card title="Model Parallelism" href="/furiosa-llm/model-parallelism">
+    Tensor/Pipeline/Data parallelism in Furiosa-LLM
+  </Card>
+  <Card title="API Reference" href="/furiosa-llm/reference">
+    The Python API reference for Furiosa-LLM
+  </Card>
+  <Card title="Examples" href="/furiosa-llm/examples">
+    Examples of using Furiosa-LLM
+  </Card>
+  <Card title="Kubernetes Deployment" href="/cloud-native/k8s-deployment">
+    A guide to deploying Furiosa-LLM on Kubernetes
+  </Card>
+</Columns>
 
 ## Cloud Native Toolkit
 
-- [Cloud Native Toolkit](/cloud-native/introduction): An overview of the Cloud Native Toolkit
-- [Container](/cloud-native/container): An overview of Container Support
-- [Kubernetes](/cloud-native/kubernetes): An overview of the Kubernetes Support
-- [LLM-D](/cloud-native/llm-d): A guide to deploying LLM-D on Kubernetes
+<Columns cols={2}>
+  <Card title="Cloud Native Toolkit" href="/cloud-native/introduction">
+    An overview of the Cloud Native Toolkit
+  </Card>
+  <Card title="Container" href="/cloud-native/container">
+    An overview of Container Support
+  </Card>
+  <Card title="Kubernetes" href="/cloud-native/kubernetes">
+    An overview of the Kubernetes Support
+  </Card>
+  <Card title="LLM-D" href="/cloud-native/llm-d">
+    A guide to deploying LLM-D on Kubernetes
+  </Card>
+</Columns>
 
 ## Device Management
 
-- [Furiosa SMI CLI](/software-stack/device-management/furiosa-smi-cli): A command line utility for managing FuriosaAI NPUs
-- [Furiosa SMI Library](/software-stack/device-management/furiosa-smi-lib): A library for managing FuriosaAI NPUs
-- [Host Tuning](/software-stack/device-management/host-tuning): Host PCI optimization tuning guides
+<Columns cols={2}>
+  <Card title="Furiosa SMI CLI" href="/software-stack/device-management/furiosa-smi-cli">
+    A command line utility for managing FuriosaAI NPUs
+  </Card>
+  <Card title="Furiosa SMI Library" href="/software-stack/device-management/furiosa-smi-lib">
+    A library for managing FuriosaAI NPUs
+  </Card>
+  <Card title="Host Tuning" href="/software-stack/device-management/host-tuning">
+    Host PCI optimization tuning guides
+  </Card>
+</Columns>
 
 ## Tutorials and Examples
 
-- [FuriosaAI SDK CookBook](https://github.com/furiosa-ai/sdk-cookbook): A collection of OSS projects for AI-driven solutions using FuriosaAI NPUs.
+<Card title="FuriosaAI SDK CookBook" href="https://github.com/furiosa-ai/sdk-cookbook">
+  A collection of OSS projects for AI-driven solutions using FuriosaAI NPUs.
+</Card>
 
 ## Customer Support
 
-- [FuriosaAI Forum](https://forums.furiosa.ai)
-- [FuriosaAI Customer Portal](https://furiosa-ai.atlassian.net/servicedesk/customer/portals/)
+<Columns cols={2}>
+  <Card title="FuriosaAI Forum" href="https://forums.furiosa.ai" horizontal />
+  <Card title="FuriosaAI Customer Portal" href="https://furiosa-ai.atlassian.net/servicedesk/customer/portals/" horizontal />
+</Columns>
 
 ## Other Links
 
-- [FuriosaAI Home](https://furiosa.ai)
-- [FuriosaAI Warboy SDK Document](https://furiosa-ai.github.io/docs/latest/en/)
+<Columns cols={2}>
+  <Card title="FuriosaAI Home" href="https://furiosa.ai" horizontal />
+  <Card title="FuriosaAI Warboy SDK Document" href="https://furiosa-ai.github.io/docs/latest/en/" horizontal />
+</Columns>

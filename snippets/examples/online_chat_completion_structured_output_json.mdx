@@ -1,0 +1,39 @@
+{/* Synced from furiosa-runtime docs/developer/examples/online_chat_completion_structured_output_json.py. Do not hand-edit — CI/CD sync target. */}
+
+```python online_chat_completion_structured_output_json.py
+import enum
+import json
+import os
+from openai import OpenAI
+import pydantic
+
+base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
+client = OpenAI(api_key=api_key, base_url=base_url)
+
+class Color(str, enum.Enum):
+    BLUE = "blue"
+    GREEN = "green"
+    PURPLE = "purple"
+
+class FruitDescription(pydantic.BaseModel):
+    name: str
+    color: Color
+    taste: str
+
+response = client.chat.completions.create(
+    model=client.models.list().data[0].id,
+    messages=[{"role": "user", "content": "Generate a JSON with the name, color, and taste of your favorite fruit."}],
+    response_format={
+        "type": "json_schema",
+        "json_schema": {
+            "name": "fruit-description",
+            "schema": FruitDescription.model_json_schema(),
+        },
+    },
+    temperature=0.0,
+)
+
+result = json.loads(response.choices[0].message.content)
+print(json.dumps(result, indent=2))
+```

@@ -1,0 +1,36 @@
+{/* Synced from furiosa-runtime docs/developer/examples/online_score_rerank_truncate.py. Do not hand-edit — CI/CD sync target. */}
+
+```python online_score_rerank_truncate.py
+import os
+
+import requests
+
+# Start server with: furiosa-llm serve path/to/reranker-model
+
+base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+
+# Long documents that may exceed model's context length
+long_documents = [
+    "Deep learning is a subset of machine learning. " * 50,
+    "Neural networks process data in layers. " * 50,
+    "Transformers revolutionized natural language processing. " * 50,
+]
+
+# Use truncate_prompt_tokens to handle long documents
+response = requests.post(
+    f"{base_url}/rerank",
+    json={
+        "model": "reranker",
+        "query": "research findings",
+        "documents": long_documents,
+        "truncate_prompt_tokens": 512,  # Truncate to 512 tokens
+        "top_n": 10,
+    },
+)
+
+data = response.json()
+print(f"Reranked {len(data['results'])} documents with truncation:")
+
+for result in data["results"]:
+    print(f"Document {result['index']}: {result['relevance_score']:.4f}")
+```

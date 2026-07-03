@@ -1,0 +1,26 @@
+{/* Synced from furiosa-runtime docs/developer/examples/offline_streaming_inference.py. Do not hand-edit — CI/CD sync target. */}
+
+```python offline_streaming_inference.py
+import asyncio
+from furiosa_llm import LLM, SamplingParams
+
+
+async def main():
+    # Load the model from Hugging Face model hub
+    with LLM("furiosa-ai/Qwen2.5-0.5B-Instruct") as llm:
+        # You can specify various parameters for text generation
+        sampling_params = SamplingParams(min_tokens=10, top_p=0.3, top_k=100)
+
+        # Prompt for the model
+        message = [{"role": "user", "content": "What is the capital of France?"}]
+        prompt = llm.tokenizer.apply_chat_template(message, tokenize=False)
+
+        # Generate text and print each token at a time
+        async for output_txt in llm.stream_generate(prompt, sampling_params):
+            print(output_txt, end="", flush=True)
+
+
+# Run the async main function
+if __name__ == "__main__":
+    asyncio.run(main())
+```

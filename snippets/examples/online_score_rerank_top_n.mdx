@@ -1,0 +1,36 @@
+{/* Synced from furiosa-runtime docs/developer/examples/online_score_rerank_top_n.py. Do not hand-edit — CI/CD sync target. */}
+
+```python online_score_rerank_top_n.py
+import os
+
+import requests
+
+# Start server with: furiosa-llm serve path/to/reranker-model
+
+base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+
+# Reranking with top_n parameter to limit results
+response = requests.post(
+    f"{base_url}/rerank",
+    json={
+        "model": "reranker",
+        "query": "machine learning frameworks",
+        "documents": [
+            "TensorFlow is a popular machine learning framework.",
+            "PyTorch is widely used in research.",
+            "Scikit-learn provides simple ML tools.",
+            "Pandas is for data manipulation.",
+            "NumPy is for numerical computing.",
+            "Keras is a high-level neural networks API.",
+            "JAX is for high-performance ML research.",
+        ],
+        "top_n": 3,  # Only return top 3 most relevant
+    },
+)
+
+data = response.json()
+print(f"Showing top {len(data['results'])} results:")
+
+for result in data["results"]:
+    print(f"{result['index']}: {result['relevance_score']:.4f} - {result['document']['text']}")
+```

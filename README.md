@@ -1,55 +1,56 @@
-# Mintlify Starter Kit
+# Furiosa Docs
 
-Use the starter kit to get your docs deployed and ready to customize.
+Central documentation repository for FuriosaAI, built on [Mintlify](https://mintlify.com). This repo is the **center of documentation**: content authored here is the source of truth, and selected content is synchronized from product repositories.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+## Architecture
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+### Repository roles
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+| Content | Home | Sync |
+|---|---|---|
+| Docs authored for the docs site (guides, overviews, releases) | this repo | two-way sync supported |
+| furiosa-runtime developer docs, Cloud-Native Toolkit, HW manual | **moved into this repo** (ported from `furiosa-runtime/docs/developer`) | maintained here |
+| Example source code | individual product repos (e.g. `furiosa-runtime/docs/developer/examples`) | tested by CI/CD in the source repo, then AI-synced into this repo |
+| Other repos' docs (TCL, vISA, Torch, …) that prefer to stay in their repo | their own repo | one-way sync into this repo |
 
-## AI-assisted writing
+### Example-code sync boundary
 
-Set up your AI coding tool to work with Mintlify:
+Example code shown in the docs lives under [`snippets/examples/`](snippets/examples/) — one MDX snippet per example file, imported by pages that show it. This is the machine boundary for the CI/CD sync pipeline:
 
-```bash
-npx skills add https://mintlify.com/docs
-```
+- Source of truth: example files in the product repo, exercised by that repo's CI.
+- The sync pipeline rewrites only `snippets/examples/*` — never page prose.
+- Do not hand-edit files in `snippets/examples/`; change the source example in the product repo instead.
 
-This command installs Mintlify's documentation skill for your configured AI tools like Claude Code, Cursor, Windsurf, and others. The skill includes component reference, writing standards, and workflow guidance.
+## Site structure
 
-See the [AI tools guides](/ai-tools) for tool-specific setup.
+Four navigation tabs (see `docs.json`):
+
+- **Software Stack** — overview, supported models, roadmap, release notes, getting started, device management (SMI, host tuning)
+- **Furiosa-LLM** — serving guides, Python API reference, examples
+- **Cloud-Native Toolkit** — container support, Kubernetes components (device plugin, feature discovery, metrics exporter, NPU operator, DRA driver), LLM-D, Furiosa-LLM Kubernetes deployment
+- **Hardware Manual** — RNGD specification
+
+## Conventions
+
+- Content ported from Sphinx RST is a faithful, syntax-only conversion — prose preserved verbatim.
+- Internal links are root-relative without extensions (`/furiosa-llm/intro`).
+- Every page has `title` (+ `description`) frontmatter.
+- Branding: `docs.json` (colors, logo) + `style.css` (generated from `@furiosa-ai/ui-kit` — do not hand-edit) + `custom.css` (hand-maintained overrides).
 
 ## Development
 
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
-
-```
+```bash
 npm i -g mint
+mint dev            # local preview at localhost:3000
+mint validate       # build validation
+mint broken-links   # internal link check
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+Pushing to `main` deploys automatically once the Mintlify GitHub App is installed.
 
-```
-mint dev
-```
+## Roadmap (phase 2)
 
-View your local preview at `http://localhost:3000`.
-
-## Publishing changes
-
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
-
-## Need help?
-
-### Troubleshooting
-
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
-
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+- CI/CD example-sync pipeline (product repos → `snippets/examples/`)
+- OpenAPI spec + interactive playground for the Furiosa-LLM OpenAI-compatible server
+- One-way sync onboarding for TCL / vISA / Torch docs
+- Versioned docs per release, custom domain, analytics

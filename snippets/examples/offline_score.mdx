@@ -1,0 +1,66 @@
+{/* Synced from furiosa-runtime docs/developer/examples/offline_score.py. Do not hand-edit — CI/CD sync target. */}
+
+```python offline_score.py
+from furiosa_llm import LLM, PoolingParams
+
+# Load a reranker or binary classification model
+with LLM("furiosa-ai/Qwen3-Reranker-8B") as llm:
+    # ============================================================
+    # Example 1: 1-to-1 scoring (single query, single document)
+    # ============================================================
+    query = "What is machine learning?"
+    document = "Machine learning is a subset of artificial intelligence."
+    outputs = llm.score(query, document)
+    print(f"Similarity score: {outputs[0].outputs.score}")
+    print("-" * 80)
+
+    # ============================================================
+    # Example 2: 1-to-N scoring (single query, multiple documents)
+    # ============================================================
+    query = "What is deep learning?"
+    documents = [
+        "Deep learning uses neural networks with multiple layers.",
+        "Python is a popular programming language.",
+        "Machine learning is a field of artificial intelligence.",
+        "Neural networks are inspired by the human brain.",
+    ]
+    outputs = llm.score(query, documents)
+    for i, output in enumerate(outputs):
+        print(f"Document {i}: score = {output.outputs.score:.4f}")
+        print(f"  Text: {documents[i][:50]}...")
+    print("-" * 80)
+
+    # ============================================================
+    # Example 3: N-to-N scoring (multiple queries, paired documents)
+    # ============================================================
+    queries = [
+        "What is Python?",
+        "What is JavaScript?",
+        "What is SQL?",
+    ]
+    documents = [
+        "Python is a programming language.",
+        "JavaScript is used for web development.",
+        "SQL is a database query language.",
+    ]
+    outputs = llm.score(queries, documents)
+    for i, (q, d, output) in enumerate(zip(queries, documents, outputs)):
+        print(f"Pair {i}: score = {output.outputs.score:.4f}")
+        print(f"  Query: {q}")
+        print(f"  Document: {d}")
+    print("-" * 80)
+
+    # ============================================================
+    # Example 4: Using PoolingParams for truncation
+    # ============================================================
+    # Truncate long documents to fit within model limits
+    pooling_params = PoolingParams(truncate_prompt_tokens=512)
+    query = "What is the capital of France?"
+    long_documents = [
+        "Paris is the capital and most populous city of France. " * 50,  # Long document
+        "London is the capital of the United Kingdom. " * 50,
+    ]
+    outputs = llm.score(query, long_documents, pooling_params=pooling_params)
+    for i, output in enumerate(outputs):
+        print(f"Document {i} score: {output.outputs.score:.4f}")
+```

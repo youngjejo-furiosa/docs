@@ -2,8 +2,18 @@
 title: "Examples"
 ---
 
-- [Chat](/furiosa-llm/examples/llm-chat)
-- [Embedding](/furiosa-llm/examples/llm-embed)
-- [Scoring (Similarity Scoring)](/furiosa-llm/examples/llm-score)
-- [Reranking (Document Reranking)](/furiosa-llm/examples/llm-rerank)
-- [OpenAI-Compatible API with Logprobs](/furiosa-llm/examples/online-chat-completion-logprobs)
+<Columns cols={2}>
+  <Card title="Chat" href="/furiosa-llm/examples/llm-chat" />
+  <Card title="Embedding" href="/furiosa-llm/examples/llm-embed">
+    This example demonstrates how to generate embeddings using the `LLM.embed()` method.
+  </Card>
+  <Card title="Scoring (Similarity Scoring)" href="/furiosa-llm/examples/llm-score">
+    This example demonstrates how to use the `LLM.score()` method for calculating similarity scores between text pairs.
+  </Card>
+  <Card title="Reranking (Document Reranking)" href="/furiosa-llm/examples/llm-rerank">
+    This example demonstrates how to use the rerank functionality to order documents by relevance to a query.
+  </Card>
+  <Card title="OpenAI-Compatible API with Logprobs" href="/furiosa-llm/examples/online-chat-completion-logprobs">
+    This example demonstrates how to retrieve log probabilities (logprobs) using the OpenAI-compatible Chat Completion API.
+  </Card>
+</Columns>

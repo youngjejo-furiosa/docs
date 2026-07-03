@@ -1,0 +1,22 @@
+{/* Synced from furiosa-runtime docs/developer/examples/online_chat_completion_structured_output_choice.py. Do not hand-edit — CI/CD sync target. */}
+
+```python online_chat_completion_structured_output_choice.py
+import os
+from openai import OpenAI
+
+base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
+api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
+client = OpenAI(api_key=api_key, base_url=base_url)
+
+# Sample review to classify
+review = "This movie was absolutely fantastic!"
+
+response = client.chat.completions.create(
+    model=client.models.list().data[0].id,
+    messages=[{"role": "user", "content": f"Classify sentiment: '{review}'"}],
+    extra_body={"structured_outputs": {"choice": ["positive", "negative", "neutral"]}},
+    temperature=0.0,
+)
+
+print(response.choices[0].message.content)
+```

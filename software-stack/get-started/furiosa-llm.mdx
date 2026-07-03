@@ -1,6 +1,11 @@
 ---
 title: "Quick Start with Furiosa-LLM"
+description: "Furiosa-LLM is a serving framework for LLM models that uses FuriosaAI's NPU."
 ---
+
+import OfflineInference from '/snippets/examples/offline_inference.mdx';
+import OfflineStreamingInference from '/snippets/examples/offline_streaming_inference.mdx';
+import OpenaiCurl from '/snippets/examples/openai_curl.mdx';
 
 Furiosa-LLM is a serving framework for LLM models that uses FuriosaAI's NPU.
 It provides a Python API compatible with vLLM and a server compatible with
@@ -50,24 +55,7 @@ First, import the `LLM` and `SamplingParams` classes from the furiosa_llm module
 The `LLM` class is used to load LLM models and provides the core API for LLM inference.
 `SamplingParams` is used to specify various parameters for text generation.
 
-```python
-from furiosa_llm import LLM, SamplingParams
-
-# Load the model from Hugging Face model hub
-with LLM("furiosa-ai/Qwen2.5-0.5B-Instruct") as llm:
-    # You can specify various parameters for text generation
-    sampling_params = SamplingParams(min_tokens=10, top_p=0.3, top_k=100)
-
-    # Prompt for the model
-    message = [{"role": "user", "content": "What is the capital of France?"}]
-    prompt = llm.tokenizer.apply_chat_template(message, tokenize=False)
-
-    # Generate text
-    response = llm.generate([prompt], sampling_params)
-
-    # Print the output of the model
-    print(response[0].outputs[0].text)
-```
+<OfflineInference />
 
 ## Streaming Inference with Furiosa-LLM
 
@@ -80,30 +68,7 @@ To perform streaming inference, use the `stream_generate` method instead of
 `generate`.
 This method is asynchronous and returns a stream of tokens as they are generated.
 
-```python
-import asyncio
-from furiosa_llm import LLM, SamplingParams
-
-
-async def main():
-    # Load the model from Hugging Face model hub
-    with LLM("furiosa-ai/Qwen2.5-0.5B-Instruct") as llm:
-        # You can specify various parameters for text generation
-        sampling_params = SamplingParams(min_tokens=10, top_p=0.3, top_k=100)
-
-        # Prompt for the model
-        message = [{"role": "user", "content": "What is the capital of France?"}]
-        prompt = llm.tokenizer.apply_chat_template(message, tokenize=False)
-
-        # Generate text and print each token at a time
-        async for output_txt in llm.stream_generate(prompt, sampling_params):
-            print(output_txt, end="", flush=True)
-
-
-# Run the async main function
-if __name__ == "__main__":
-    asyncio.run(main())
-```
+<OfflineStreamingInference />
 
 ## Chat Inference with Furiosa-LLM
 
@@ -147,15 +112,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 
 Then, you can test the server using the following curl command:
 
-```bash
-curl http://localhost:8000/v1/chat/completions \
-    -H "Content-Type: application/json" \
-    -d '{
-    "model": "EMPTY",
-    "messages": [{"role": "user", "content": "What is the capital of France?"}]
-    }' \
-    | python -m json.tool
-```
+<OpenaiCurl />
 
 Example output:
 

@@ -1,0 +1,100 @@
+{/* Synced from furiosa-runtime docs/developer/examples/offline_toolcalling.py. Do not hand-edit — CI/CD sync target. */}
+
+```python offline_toolcalling.py
+import json
+import random
+import string
+from furiosa_llm import LLM, SamplingParams
+
+
+def generate_random_id(length=9):
+    characters = string.ascii_letters + string.digits
+    random_id = "".join(random.choice(characters) for _ in range(length))
+    return random_id
+
+
+# simulate an API that can be called
+def get_current_weather(city: str, state: str, unit: "str"):
+    return (
+        f"The weather in {city}, {state} is 85 degrees {unit}. It is "
+        "partly cloudly, with highs in the 90's."
+    )
+
+
+tool_functions = {"get_current_weather": get_current_weather}
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_weather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "city": {
+                        "type": "string",
+                        "description": "The city to find the weather for, e.g. 'San Francisco'",
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "the two-letter abbreviation for the state that the city is"
+                        " in, e.g. 'CA' which would mean 'California'",
+                    },
+                    "unit": {
+                        "type": "string",
+                        "description": "The unit to fetch the temperature in",
+                        "enum": ["celsius", "fahrenheit"],
+                    },
+                },
+                "required": ["city", "state", "unit"],
+            },
+        },
+    }
+]
+
+messages = [
+    {
+        "role": "system",
+        "content": "When you receive a tool call response, use the output to format an answer to the original user question.\n\nYou are a helpful assistant with tool calling capabilities.",
+    },
+    {
+        "role": "user",
+        "content": "Can you tell me what the temperature will be in Dallas, in fahrenheit?",
+    },
+]
+
+with LLM("furiosa-ai/Llama-3.1-8B-Instruct") as llm:
+    sampling_params = SamplingParams(max_tokens=512, temperature=1.0)
+
+    outputs = llm.chat(messages, sampling_params=sampling_params, tools=tools)
+    output = outputs[0].outputs[0].text.strip()
+
+    # append the assistant message
+    messages.append(
+        {
+            "role": "assistant",
+            "content": output,
+        }
+    )
+
+    # let's now actually parse and execute the model's output simulating an API call by using the
+    # above defined function
+    tool_call = json.loads(output)
+    tool_answer = tool_functions[tool_call["name"]](**tool_call["parameters"])
+
+    # append the answer as a tool message and let the LLM give you an answer
+    messages.append(
+        {
+            "role": "tool",
+            "content": {"output": tool_answer},
+            "tool_call_id": generate_random_id(),
+        }
+    )
+
+    outputs = llm.chat(messages, sampling_params, tools=tools)
+    print(outputs[0].outputs[0].text.strip())
+# yields
+#   'The current temperature in Dallas, TX is 85 degrees Fahrenheit. '
+#   'It is partly cloudy with highs in the 90's.
+```

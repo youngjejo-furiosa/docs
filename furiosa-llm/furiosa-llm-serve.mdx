@@ -1,6 +1,12 @@
 ---
 title: "OpenAI-Compatible Server"
+description: "Furiosa-LLM offers an OpenAI-compatible server that hosts a single model and provides OpenAI-compatible chat, completions, responses, and embedding APIs along with some additional pooling API support."
 ---
+
+import OpenaiCurl from '/snippets/examples/openai_curl.mdx';
+import OnlineChatCompleteAsyncClient from '/snippets/examples/online_chat_complete_async_client.mdx';
+import OnlineChatCompleteToolcalling from '/snippets/examples/online_chat_complete_toolcalling.mdx';
+import OnlineChatCompleteReasoning from '/snippets/examples/online_chat_complete_reasoning.mdx';
 
 Furiosa-LLM offers an OpenAI-compatible server that hosts a single model
 and provides OpenAI-compatible chat, completions, responses, and embedding APIs
@@ -64,15 +70,7 @@ To use the OpenAI-Compatible server, you need the following:
 Once the server is running, you can interact with it using an HTTP client,
 as shown in the following example:
 
-```bash
-curl http://localhost:8000/v1/chat/completions \
-    -H "Content-Type: application/json" \
-    -d '{
-    "model": "EMPTY",
-    "messages": [{"role": "user", "content": "What is the capital of France?"}]
-    }' \
-    | python -m json.tool
-```
+<OpenaiCurl />
 
 You can also use the OpenAI client to interact with the server.
 To use the OpenAI client, you need to install the `openai` package first:
@@ -84,30 +82,7 @@ pip install openai
 The following is an example using OpenAI client to call `chat.completions` API
 with streaming mode:
 
-```python
-import asyncio
-import os
-from openai import AsyncOpenAI
-
-base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
-api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
-
-client = AsyncOpenAI(api_key=api_key, base_url=base_url)
-
-async def run():
-    stream_chat_completion = await client.chat.completions.create(
-        model="EMPTY",
-        messages=[{"role": "user", "content": "What is the capital of France?"}],
-        stream=True,
-    )
-
-    async for chunk in stream_chat_completion:
-        print(chunk.choices[0].delta.content or "", end="", flush=True)
-
-
-if __name__ == "__main__":
-    asyncio.run(run())
-```
+<OnlineChatCompleteAsyncClient />
 
 ## Chat Templates
 
@@ -152,47 +127,7 @@ furiosa-llm serve furiosa-ai/EXAONE-4.0-32B-FP8 --enable-auto-tool-choice --tool
 To use tool calling, specify the `tools` and `tool_choice`
 parameters. Here's an example:
 
-```python
-import json
-import os
-from openai import OpenAI
-
-base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
-api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
-client = OpenAI(base_url=base_url, api_key=api_key)
-
-def get_weather(location: str, unit: str):
-    return f"Getting the weather for {location} in {unit}..."
-tool_functions = {"get_weather": get_weather}
-
-tools = [{
-    "type": "function",
-    "function": {
-        "name": "get_weather",
-        "description": "Get the current weather in a given location",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "location": {"type": "string", "description": "City and state, e.g., 'San Francisco, CA'"},
-                "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}
-            },
-            "required": ["location", "unit"]
-        }
-    }
-}]
-
-response = client.chat.completions.create(
-    model=client.models.list().data[0].id,
-    messages=[{"role": "user", "content": "What's the weather like in San Francisco?"}],
-    tools=tools,
-    tool_choice="required"
-)
-
-tool_call = response.choices[0].message.tool_calls[0].function
-print(f"Function called: {tool_call.name}")
-print(f"Arguments: {tool_call.arguments}")
-print(f"Result: {get_weather(**json.loads(tool_call.arguments))}")
-```
+<OnlineChatCompleteToolcalling />
 
 The expected output is as follows.
 
@@ -231,33 +166,7 @@ You can access the reasoning content through these response fields:
 
 Here's an example that demonstrates how to access the reasoning content:
 
-```python
-import os
-from openai import OpenAI
-
-base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
-api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
-
-client = OpenAI(api_key=api_key, base_url=base_url)
-
-
-messages = [{"role": "user", "content": "9.11 and 9.8, which is greater?"}]
-response = client.chat.completions.create(
-    model=client.models.list().data[0].id,
-    messages=messages,
-    # Pass the argument here in the extra_body field for Qwen3, Exaone4
-    # It depends on the model you are using
-    extra_body={
-        "chat_template_kwargs": {
-            "enable_thinking": True
-        }
-    }
-)
-
-if hasattr(response.choices[0].message, "reasoning"):
-    print("Reasoning:", response.choices[0].message.reasoning)
-print("Answer:", response.choices[0].message.content)
-```
+<OnlineChatCompleteReasoning />
 
 <Note>
 The `reasoning` field is a Furiosa-LLM-specific extension and is not part of the standard OpenAI API.

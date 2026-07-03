@@ -1,6 +1,11 @@
 ---
 title: "Responses API"
+description: "Furiosa-LLM implements the OpenResponses specification, a multi-provider, interoperable LLM interface."
 ---
+
+import OnlineResponsesBasic from '/snippets/examples/online_responses_basic.mdx';
+import OnlineResponsesMultiTurn from '/snippets/examples/online_responses_multi_turn.mdx';
+import OnlineResponsesStreaming from '/snippets/examples/online_responses_streaming.mdx';
 
 Furiosa-LLM implements the [OpenResponses specification](https://www.openresponses.org/specification),
 a multi-provider, interoperable LLM interface. The Responses API is available for
@@ -75,33 +80,7 @@ The server automatically prepends the stored conversation history from the
 referenced response. This is the simplest approach and requires `store=true`
 on the referenced response.
 
-```python
-import os
-from openai import OpenAI
-
-base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
-api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
-client = OpenAI(api_key=api_key, base_url=base_url)
-model = client.models.list().data[0].id
-
-# Turn 1: store the response for later continuation
-res1 = client.responses.create(
-    model=model,
-    input="My name is Alice.",
-    store=True,
-)
-print(f"Turn 1: {res1.output[0].content[0].text}")
-print(f"Response ID: {res1.id}")
-
-# Turn 2: continue the conversation using previous_response_id
-res2 = client.responses.create(
-    model=model,
-    input="What is my name?",
-    previous_response_id=res1.id,
-    store=True,
-)
-print(f"Turn 2: {res2.output[0].content[0].text}")
-```
+<OnlineResponsesMultiTurn />
 
 ### Using manual context
 
@@ -123,43 +102,11 @@ res2 = client.responses.create(model=model, input=context)
 
 Basic usage:
 
-```python
-import os
-from openai import OpenAI
-
-base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
-api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
-client = OpenAI(api_key=api_key, base_url=base_url)
-model = client.models.list().data[0].id
-
-# Non-streaming
-response = client.responses.create(
-    model=model,
-    input="What is the capital of France?",
-)
-print(response.output[0].content[0].text)
-```
+<OnlineResponsesBasic />
 
 Streaming:
 
-```python
-import os
-from openai import OpenAI
-
-base_url = os.getenv("OPENAI_BASE_URL", "http://localhost:8000/v1")
-api_key = os.getenv("OPENAI_API_KEY", "EMPTY")
-client = OpenAI(api_key=api_key, base_url=base_url)
-model = client.models.list().data[0].id
-
-with client.responses.stream(
-    model=model,
-    input="What is the capital of France?",
-) as stream:
-    for event in stream:
-        if event.type == "response.output_text.delta":
-            print(event.delta, end="", flush=True)
-print()
-```
+<OnlineResponsesStreaming />
 
 ## API Reference
 

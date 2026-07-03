@@ -1,0 +1,34 @@
+{/* Synced from furiosa-runtime docs/developer/examples/engine_cli_async.py. Do not hand-edit — CI/CD sync target. */}
+
+```python engine_cli_async.py
+import argparse
+from furiosa_llm import AsyncLLMEngine, AsyncEngineArgs, SamplingParams
+
+async def main():
+    parser = argparse.ArgumentParser()
+    parser = AsyncEngineArgs.add_cli_args(parser)
+    args = parser.parse_args()
+    engine_args = AsyncEngineArgs.from_cli_args(args)
+    engine = AsyncLLMEngine.from_engine_args(engine_args)
+    example_input = {
+        "prompt": "What is LLM?",
+        "temperature": 0.0,
+        "request_id": "request-123",
+    }
+
+    results_generator = engine.generate(
+        example_input["prompt"],
+        SamplingParams(temperature=example_input["temperature"]),
+        example_input["request_id"]
+    )
+
+    final_output = None
+    async for request_output in results_generator:
+        final_output = request_output
+
+    print(final_output)
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+```
